@@ -1,20 +1,8 @@
-import { ObjectType, Field, InputType } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm";
+import { ObjectType, Field } from "type-graphql";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, DeleteDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import { ORMObject } from "../../../types/ORMObject";
-import { SkillsType } from "./Test";
-
-
-
-@ObjectType()
-@InputType('TestSkillTypeInput')
-export class TestSkillType {
-  @Field({ nullable: true })
-  public TestId?: string;
-
-  @Field({ nullable: true })
-  public skillType?: SkillsType;
-
-}
+import { Test } from "./Test";
+import { EnglishCertificateType } from "../../part/entities/Part";
 
 @ObjectType()
 @Entity()
@@ -27,10 +15,17 @@ export class TestCategory extends ORMObject<TestCategory> {
     @Column()
     public testCategoryName!: string;
 
+    @Field(_type => [Test], { nullable: true })
+    @OneToMany(
+        _type => Test,
+        test => test.testCategory,
+        { nullable: true }
+    )
+    public test?: Promise<Test[]>;
 
-    @Field(_type => [TestSkillType])
-    @Column({ type: 'json' })
-    public testSkillType!: TestSkillType[];
+    @Field(_type => EnglishCertificateType)
+    @Column()
+    public certificateType!: EnglishCertificateType;
 
     @Field(_type => Boolean)
     @Column({ default: false })
@@ -41,12 +36,12 @@ export class TestCategory extends ORMObject<TestCategory> {
     public createdAt!: Date;
 
     @Field()
-    @CreateDateColumn()
+    @UpdateDateColumn()
     public updatedAt!: Date;
 
     @Field({ nullable: true })
     @Column({ nullable: true })
-    @CreateDateColumn()
+    @DeleteDateColumn()
     public deleteAt?: Date;
 
 }

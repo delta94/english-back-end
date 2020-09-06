@@ -3,22 +3,199 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+type Answers {
+  answerContent: String
+  keyAnswer: String
+}
+
+input AnswersInput {
+  answerContent: String
+  keyAnswer: String
+}
+
+type Asset {
+  createdAt: DateTime!
+  name: String!
+  type: MediaType!
+  url: String!
+}
+
+input AssetInput {
+  file: String!
+  name: String!
+  type: MediaType!
+}
+
+type AudioSeconds {
+  autdioSecs: Float
+  partId: String
+}
+
+input AudioSecondsInput {
+  autdioSecs: Float
+  partId: String
+}
+
 # The javascript `Date` as string. Type represents date and time as the ISO Date string.
 scalar DateTime
 
+enum EnglishCertificateType {
+  IELTS
+  Toiec
+}
+
+enum MediaType {
+  Audio
+  Image
+  Video
+}
+
 type Mutation {
+  createPart(data: NewPartInput!): Part!
+  createQuestion(data: NewQuestionInput!): Question!
+  createTest(data: NewTestInput!): Test!
   createUser(data: UserInput!): User!
+  updatePart(data: NewPartInput!): Part!
+  updateQuestion(data: NewQuestionInput!): Question!
+  updateTest(data: NewTestInput!, id: String!): Test!
+  uploadMedia(data: AssetInput!): Asset!
+}
+
+input NewPartInput {
+  certificateType: EnglishCertificateType!
+  description: String!
+  id: String
+  partName: String!
+  skillType: SkillsType!
+}
+
+input NewQuestionInput {
+  answers: [AnswersInput!]!
+  audioSec: Float!
+  certificateType: EnglishCertificateType!
+  content: String
+  description: String
+  explaination: String
+  id: String
+  image: String
+  partId: String
+  questionName: String!
+  questionType: QuestionType!
+  result: String!
+  skillType: SkillsType!
+  testId: String
+}
+
+input NewTestInput {
+  autdioPartSecs: [AudioSecondsInput!]
+  certificateType: EnglishCertificateType
+  description: String
+  id: String
+  isPublished: Boolean
+  skillType: SkillsType
+  testName: String!
+}
+
+type Part {
+  certificateType: EnglishCertificateType!
+  createdAt: DateTime!
+  deleteAt: DateTime
+  description: String!
+  id: String!
+  partName: String!
+  skillType: SkillsType!
+  test: TestQuestion
+  testQuestion: Test
+  updatedAt: DateTime!
 }
 
 type Query {
+  part(id: String!): Part!
+  parts(certificateType: String!): [Part!]!
+  question(id: String!): Question!
+  questions(questionFilterType: QuestionFilterTypeInput!): [Question!]!
+  test(id: String!): Test!
+  tests(testCategoryId: String!): [Test!]!
   user(id: String!): User!
   users: [User!]!
+}
+
+type Question {
+  answers: [Answers!]!
+  audioSec: Float!
+  certificateType: EnglishCertificateType!
+  content: String
+  createdAt: DateTime!
+  deleteAt: DateTime
+  description: String
+  explaination: String
+  id: String!
+  image: String!
+  questionName: String!
+  questionType: QuestionType!
+  result: String!
+  skillType: SkillsType!
+  testQuestion: TestQuestion
+  updatedAt: DateTime!
+}
+
+input QuestionFilterTypeInput {
+  certificateType: EnglishCertificateType!
+  skillType: SkillsType
+}
+
+enum QuestionType {
+  FillBlank
+  MultiChoice
+  SingleChoice
+}
+
+enum SkillsType {
+  Listening
+  Reading
 }
 
 type SocialLink {
   facebook: String
   linkedin: String
   twitter: String
+}
+
+type Test {
+  audioPartSecs: [AudioSeconds!]
+  certificateType: EnglishCertificateType!
+  createdAt: DateTime!
+  deleteAt: DateTime
+  description: String!
+  id: String!
+  isPublished: Boolean!
+  part: Part
+  skillType: SkillsType!
+  testCategory: TestCategory!
+  testName: String!
+  testQuestions: [TestQuestion!]
+  updatedAt: DateTime!
+}
+
+type TestCategory {
+  certificateType: EnglishCertificateType!
+  createdAt: DateTime!
+  deleteAt: DateTime
+  id: String!
+  isPublished: Boolean!
+  test: [Test!]
+  testCategoryName: String!
+  updatedAt: DateTime!
+}
+
+type TestQuestion {
+  createdAt: DateTime!
+  deleteAt: DateTime
+  id: String!
+  part: Part!
+  question: Question!
+  test: Test!
+  updatedAt: DateTime!
 }
 
 type User {

@@ -18,10 +18,9 @@ export class UserResolver {
     return await this.userRepository.findOne(id);
   }
 
-  // @Authorized()
+  @Authorized()
   @Query(_type => [User])
   public async users(): Promise<User[] | undefined> {
-    console.log('HELLO', 'OKAY')
     return await this.userRepository.find();
   }
 

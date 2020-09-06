@@ -1,8 +1,6 @@
 import { EntityManager, getManager, UpdateResult } from 'typeorm';
 import { ApolloError } from 'apollo-server-express';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { AssetRepository } from '../modules/assets/AssetRepository';
-
 export class ORMObject<T> {
   constructor(init?: Partial<T>) {
     if (!init) {
@@ -15,30 +13,6 @@ export class ORMObject<T> {
     });
   }
 
-  protected async makeDraftMediaPermanent(orig: any | null, data: any): Promise<any> {
-    const assetRepository = getManager().getCustomRepository(AssetRepository);
-
-    for (const prop in data) {
-      if (data.hasOwnProperty && data.hasOwnProperty(prop)) {
-        if (prop.endsWith('MediaUrl') && data[prop] && data[prop].includes('-draft')) {
-          const origUrl = orig ? (orig[prop] as string) : undefined;
-          const draftUrl = data[prop] as string;
-          const newUrl = await assetRepository.makeAssetPermanent(draftUrl, origUrl);
-
-          // Rename property coming in to new neame
-          data[prop] = newUrl;
-          continue;
-        }
-
-        if (typeof data[prop] === 'object') {
-          // Recurse
-          data[prop] = await this.makeDraftMediaPermanent(orig ? orig[prop] : null, data[prop]);
-        }
-      }
-    }
-
-    return data;
-  }
 
   // Overload this method if any items in data need to be handled specially
   public async updateWith(
@@ -47,7 +21,6 @@ export class ORMObject<T> {
   ): Promise<T> {
     const manager = entityManager ? entityManager : getManager();
 
-    await this.makeDraftMediaPermanent(this, data);
 
     const id = (this as any).id as string;
     if (!id) {
@@ -74,8 +47,6 @@ export class ORMObject<T> {
   public async save(entityManager?: EntityManager): Promise<T> {
     const manager = entityManager ? entityManager : getManager();
 
-    // Modifies this in-place
-    await this.makeDraftMediaPermanent(null, this);
 
     return manager.save((this as unknown) as T);
   }

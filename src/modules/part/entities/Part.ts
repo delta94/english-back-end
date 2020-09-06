@@ -1,52 +1,87 @@
-import { ObjectType, Field } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne } from "typeorm";
+import { ObjectType, Field, registerEnumType, InputType } from "type-graphql";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  OneToOne,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  OneToMany,
+} from "typeorm";
 import { ORMObject } from "../../../types/ORMObject";
 import { TestQuestion } from "../../testQuestion/entities/TestQuestion";
-import { Test } from "../../test/entities/Test";
+import { Test, SkillsType } from "../../test/entities/Test";
 
+export enum EnglishCertificateType {
+  Toiec = "Toiec",
+  IELTS = "IELTS",
+}
 
+registerEnumType(EnglishCertificateType, {
+  name: "EnglishCertificateType",
+});
 @ObjectType()
 @Entity()
 export class Part extends ORMObject<Part> {
-    @Field()
-    @PrimaryGeneratedColumn()
-    public readonly id!: string;
+  @Field()
+  @PrimaryGeneratedColumn()
+  public readonly id!: string;
 
-    @Field()
-    @Column()
-    public partName!: string;
+  @Field()
+  @Column()
+  public partName!: string;
 
-    @Field()
-    @Column({ type: 'text' })
-    public description!: string;
+  @Field()
+  @Column({ type: "text" })
+  public description!: string;
 
-    @Field(_type => Test, { nullable: true })
-    @OneToOne(
-        _type => Test,
-        test => test.part,
-        { nullable: true }
-    )
-    public testQuestion?: Promise<TestQuestion>;
+  @Field(_type => SkillsType)
+  @Column()
+  public skillType!: SkillsType;
 
-    @Field(_type => TestQuestion, { nullable: true })
-    @OneToOne(
-        _type => TestQuestion,
-        testQuestion => testQuestion.part,
-        { nullable: true }
-    )
-    public test?: Promise<Test>;
-    
-    @Field()
-    @CreateDateColumn()
-    public createdAt!: Date;
+  @Field(_type => EnglishCertificateType)
+  @Column()
+  public certificateType!: EnglishCertificateType;
 
-    @Field()
-    @CreateDateColumn()
-    public updatedAt!: Date;
+  @Field(_type => Test, { nullable: true })
+  @OneToMany(_type => Test, test => test.part, { nullable: true })
+  public testQuestion?: Promise<TestQuestion>;
 
-    @Field({ nullable: true })
-    @Column({ nullable: true })
-    @CreateDateColumn()
-    public deleteAt?: Date;
+  @Field(_type => TestQuestion, { nullable: true })
+  @OneToOne(_type => TestQuestion, testQuestion => testQuestion.part, {
+    nullable: true,
+  })
+  public test?: Promise<Test>;
 
+  @Field()
+  @CreateDateColumn()
+  public createdAt!: Date;
+
+  @Field()
+  @UpdateDateColumn()
+  public updatedAt!: Date;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  @DeleteDateColumn()
+  public deleteAt?: Date;
+}
+
+@InputType()
+export class NewPartInput implements Partial<Part> {
+  @Field({ nullable: true })
+  public id?: string;
+
+  @Field()
+  public partName!: string;
+
+  @Field(_type => SkillsType)
+  public skillType!: SkillsType;
+
+  @Field()
+  public description!: string;
+
+  @Field(_type => EnglishCertificateType)
+  public certificateType!: EnglishCertificateType;
 }

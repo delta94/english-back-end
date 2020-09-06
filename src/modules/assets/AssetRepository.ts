@@ -1,390 +1,51 @@
-import { ApolloError } from 'apollo-server-express';
-import ImgixClient from 'imgix-core-js';
-import { EntityRepository, QueryRunner, Repository, SelectQueryBuilder } from 'typeorm';
-import { Asset, AssetEntity, AssetInput, AssetUrls, ImageHint } from './entities/Asset';
-// import { s3 } from '../../utils/s3Promises';
-import { config } from '../../config';
-import { ScrapedVideoMetadata } from './resolvers/ScrapedVideoMetadata';
-
+import {
+  EntityRepository,
+  QueryRunner,
+  Repository,
+  SelectQueryBuilder,
+} from "typeorm";
+import { Asset, AssetInput } from "./entities/Asset";
+// import { config } from '../../config';
+import cloudinary from "cloudinary";
 // tslint:disable
 // const YoutubeDlWrap = require('youtube-dl-wrap');
 
-class MySelectQueryBuider extends SelectQueryBuilder<Asset> {
-  public scopeInTeam(teamId: string): MySelectQueryBuider {
-    return this.andWhere('asset.scope = :scope', {
-      scope: AssetEntity.team,
-    }).andWhere('asset.id = :id', { id: teamId });
-  }
-}
+class MySelectQueryBuider extends SelectQueryBuilder<Asset> {}
 
 @EntityRepository(Asset)
 export class AssetRepository extends Repository<Asset> {
-  public createQueryBuilder(_alias?: string, queryRunner?: QueryRunner): MySelectQueryBuider {
-    return new MySelectQueryBuider(super.createQueryBuilder('asset', queryRunner));
+  public createQueryBuilder(
+    _alias?: string,
+    queryRunner?: QueryRunner
+  ): MySelectQueryBuider {
+    return new MySelectQueryBuider(
+      super.createQueryBuilder("asset", queryRunner)
+    );
   }
 
-  public async scrapeVideoMetaFromURL(teamId: string, url: string): Promise<ScrapedVideoMetadata> {
-    /*
-      JSON Output:
+  public async uploadMedia(assetInput: AssetInput): Promise<Asset | undefined> {
+    cloudinary.v2.config({
+      cloud_name: process.env.CLOUDINARY_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
 
-    {
-      upload_date: '20170317',
-      protocol: 'https',
-      extractor: 'youtube',
-      series: null,
-      format: '22 - 1280x720 (720p)',
-      format_note: '720p',
-      chapters: null,
-      height: 720,
-      acodec: 'mp4a.40.2',
-      like_count: 145952,
-      duration: '2:27',
-      fulltitle: '박재범 - 몸매 | BisMe Choreography',
-      player_url: '/s/player/68f00b39/player_ias.vflset/en_US/base.js',
-      playlist_index: null,
-      album: 'Worldwide',
-      view_count: 8937048,
-      playlist: null,
-      title: '박재범 - 몸매 | BisMe Choreography',
-      _filename: '박재범 - 몸매 _ BisMe Choreography-8HMzWwlIUXo.mp4',
-      creator: '박재범 Jay Park',
-      ext: 'mp4',
-      id: '8HMzWwlIUXo',
-      dislike_count: 2119,
-      average_rating: 4.9427571,
-      abr: 192,
-      uploader_url: 'http://www.youtube.com/channel/UCO_HutTdw0PTxGPK7FG1fRA',
-      categories: ['Entertainment'],
-      fps: 30,
-      season_number: null,
-      annotations: null,
-      webpage_url_basename: 'watch',
-      filesize: null,
-      display_id: '8HMzWwlIUXo',
-      asr: 44100,
-      automatic_captions: {},
-      description:
-        '박재범(Jay park) - 몸매(Mommae) | BisMe Choreography | MOVE Dance Studio(분당무브댄스학원)\n\nChoreography | 화목(주2회) 20:20~21:40\n\nMOVE Dance Studio, Bundang, Korea.\nMusic : 박재범 - 몸매\n\n#choreography #박재범 #몸매 #BisMe\n\nmovedance@naver.com\nKakao ID : movedance\n\n무브댄스 홈페이지\nhttp://www.movedance.co.kr\n\n페이스북\nhttps://www.facebook.com/movedancekorea\n\n인스타그램\nhttps://www.instagram.com/movedanstagram',
-      tags: ['choreography', 'dance', '댄스', '무브댄스', '박재범', '몸매', 'BisMe'],
-      track: '몸매 Mommae (Feat. Ugly Duck)',
-      requested_subtitles: null,
-      start_time: null,
-      tbr: 1157.405,
-      uploader: 'MOVE Dance Studio 무브댄스학원',
-      extractor_key: 'Youtube',
-      format_id: '22',
-      episode_number: null,
-      uploader_id: 'UCO_HutTdw0PTxGPK7FG1fRA',
-      subtitles: {},
-      release_year: null,
-      http_headers: {
-        'Accept-Language': 'en-us,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9; q = 0.8',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3543.4 Safari/537.36',
-        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-        Referer: 'api.ewebinar.com',
+    const result = await cloudinary.v2.uploader.upload(
+      `%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAHAAAABwCAYAAADG4PRLAAAAAXNSR0IArs4c6QAADnpJREFUeAHtXQlwHMUV%2FX9HRsIYWYCllUwIRQKYEMdc5gq3w2VIIDZE6LCNDQRzuIpUgguogmCHCg7kgBSQYAJ2MOhAIbhswpGQYBXhSLjD7XAmRWytBDE2xpaDdn9ejzzrXWm0mp3d%2BbMrb1dJM9PHf%2F%2F32%2B7p7umDqUid9NxTR4nIJErwJGKaRMJ74loJc3YiEvyZK5tnONmAf5%2FhGX%2ByEXE%2FxfV9Yn6ZOPIqlfe9wFXN6%2ByoRfaPi0FfWfPgaLI2fZ0ocRSJHE1ChyDzd8mz7l2Q%2FSJ%2BBH%2BliPU015zzRJ7lByKuYAmUrvYjSBLfgdXHgaxDArF%2BeKFPI0onWdYyrq5fPXx0%2FRgFRaCsW15FW7aci5J2Pqq7r%2BlnR0bEp1Hyf0O11n3M9ZszxlQMLAgCpadtMsXleyCtWdF2v1B4h8oysspu4pr6d%2FwKyVe6UAmUrrYzkBnzUUUenS%2BDFOUIGkIryOIfc3Xj84q4aVChEChr22bD%2BCtA3H5p2hTrg6DhY%2FEirml4RNsEVQJR4g4HcXehqvyqtqEqeCJ%2FhG0XcV3jByp4AFEhUDa0jkMv7OcocTO1MLUycBCO0Bb8SG%2Bg2qrrmU%2FDfbAucAIl1n4x3nM3wowxwZpSYNJF%2FkVkzeG6c1YFqVlgBErPip2pb9MSlPGzgzSgsGVLAvYvpJrG65gZjZ78u0AIlK4O9OHiK6DuXvlXuRglyp9Jypq4rr4n39pH8i0QDZXzQN4rkFsiL5m5fCJx%2FGV7dCnpl5%2BbvBII8q6GWmhllpxLDoxHW6ATJJ7pEubbK28ESlfrTdDiOt%2BabA8JmcrRQl1uN%2BzyZG%2FO70ARYYq13wl9UHWWnOccEPkF1TZenmvjJncCu9paoHSTZ8VLEbflgNA96PTP2uaR%2FZ3vKtSUPAyJLQNkibzs870%2FBdNMibX9xG9yk853CUSD5Q6k%2F24u4KW0W3NAaB5K4m1%2B8sMXgSDvFoDN8wNYSuOaA6aT%2F22ubVzpGprBM2sC0Qy%2BDC2pmzPILAX5zQFJHM51zc9mkzwrAkHeRPRlXkDFu0M2IKW4nnPgP1ReMZF3mfaJ1xSeGzEiSytA3u9L5HnNWl%2Fxdqfe3rZsUnomkGLlN4O8fbMRXorrIweYTkXL9HKvKT1VobK25TTMn3zIq9BSvDzkgJWYzNXNLwwnaVgCpbtjDCXib0NQ7XDCSuH5zAF5laJlB2EGXDyT1OGrUImbjmaJvEy5GEgYplV292GmXmaXsQSi6jwMVeffM4sowFCRXoxR9OCdvcbWTmg87vcoQE0zqyS0iXaIT%2BDdZnw4VMSyoQJsf2YzSF3gTsyUhT9RhJ%2FChOAusiQGg81aiEFOPr63kuIcJSrDuor4MZioezLm6Rw7KGKheDCNps%2Bt26HON4dSacgSiHHOS%2FGrvXWohKH6Cz1PEXx3HGW18a7163PRxZ4N3rtlBrHMhZyJucgKLK3QCRhq63ST70qgSMcOFOv7ANVQnVui8PwwNYEi13Btw9%2BC0AHfNKfA5h9B9lFByM9BZieG2U5wS%2B9OYP9Msl%2B5JQjHT55FifsB1zQ9qYEv3a2nYtmaabwdoIHnCSMix7jZ705gV5t5ae7uSXCQkUQ%2BwrvtQo42Lg8SZijZEmuZhbWEeI3wzkPF0fOXx7m26RsD8QZ1IzAKcBEiFQB59ByVxSeFRZ7JKI42L0Mr%2FCAMIb41MOP0n3kKuMEayXQ3iEBKCL42hOyE7sZL%2BzCunrk2ZE1AYsO7WIl0KFqsj4atCyXowoE6pBEoPS1m5et%2BAyOpPgstBHmzVTGHAcMyso1YF2ia8kuGiRpwsJxjf1RIQUkjEH2kGSlh%2BrdCV4K8BfrAwyOaIS20BLHwNMRpk8wVFKuYnqptkkCRBRG8sJtTA1XvhW4HeTeoYvoBi6421VjWX879QLmmEUorZMlWKFpcp5BEwqrn%2F0LRhpNynWLnanAAnnY11lXxj5A%2Br2Fwu3w8107vNqYlSyDIMxsK6DuRj6FQU7GQZzKIeU4v%2Fp2ln1k2okW0JTm0to1AolNDUciiGc6vKRR8n6AYDXoNJXC%2Bz%2BQ5JpMTHQE2gdLdsg88Quj7SQdGF8Kqtp088H%2BtsW5C4tf8C%2FCdcqqTsr8EipVk1AkI%2FGo%2B%2BUTKwu9z5mDo1o%2BtF%2BQgwmdSrkKhO9Ak7icwsa1I%2BpToJ9lt6F91%2BUlYSGnQtcD3UnlMXac4n2Qw%2BwlkmaKugFX2M3XMoACFrw9K9JByt27NEpFYKz5wctWQEQMJkPaRUPqcrEH%2FtROl8G3nWem6v8GJoDm8rxJgCgxnNfcxJWHh3gpp27S3yMPlEQyQmhaoplvvZw2ApoK%2BsEapE0gU27APhs9EefDabIYz8hyPa3oLXyz%2BrWqZ0FdQhSqXQGH17agUM%2FVhRSw0XWSCGcD%2BoipoJPGEKp4mWISf1IRDid8d3Qh7e2ItXEzqa35PC0wdR%2BQdXUypBoE8Wg1U1JvaaqbZQKPLlQmkcaYE7qhmJdOHalghAHHldHxZoY1q0My7KZdAyrhQQ83wQIFEcR6PqULN9G09N%2FIJFFYc3%2BUoSqCiYxqliBYOFEvge4SmGmbegZ7XY6cm9HdfCBNk%2FWnuOZXwWM9xc4%2B43vQDcYqJmhujhhQakOjN4hYCgSSKBIruoEEYJGquQ2QBgcyua%2BmCsZ0rZcMDuwUjO3yp8lEHpqWwObdJxwl%2FYhoxigQCbfPnyoPnOnlpo%2FTFdW1jAYHOMmQ1OxNHqkFpAzENWnwSsAox8znpnwGDpIsXOj7dYwQ9JWTQ8q9greM3zDtQeemUHBusUeFIt3fpZz5OFZ3lNXyRt1argmKxpHS3na2LqYAW31SvgJIOEeHXI9gBxhCoO8SVoNnpmoyIp%2FN0rZDPcOjWmog9OVX%2FM8%2Fp2AFqb12Dg0OTnvaDIV23AWN26oAz3Qh0XfgJ%2B6r5L9F3hSZcoFhxuTpQ%2Ba7C%2BznrJ5Docdc4gXryBbKuZc9AIRSE4wiBAwAzTQFqIITNWT%2BBO1r6U8ONOr28eKBWxfRsH7mQkKXqOpsT0mrHPmNwbQJ5bP1%2FMSb6iroizKfI2vZw1iXmw9hY2zwMhByUD1FZyWB5yjnazqlCTfoQqlEDm1hsnwlvbovIydqO%2FTEr7MZwVOZVDm4KgZH7HE%2FVqzkPvs9qt6sjVWD%2FYPYSa%2B7rQOOvwr%2BUHFJa3OGkThLYv%2F%2BYvOcEqF7NjoHd7beoYvoEszeDiFX8Dk33cI6RFXqOqxuSw59JAvvt4bt82pV7MqFLsdnclbkLClhC9wSTR8k16gGjuYiX36Z6phM4Kr4MgZIaQfeeF2E7qWt1Mb2hYQdHS9a23o3cme0tRRCx5HMqL2tJlZxG4NadYcPpUjhaCS1ASVziPBbC1d4oNtb3KN55s8LVhx8YuD9qGoG2cpL4ZbhKGnSeg%2BN9nkFLrzpsXaSnYwJ2zX0ROp0Yti7Q4eaBOgwiEEe%2FYIWNvD4wYgjPR%2BDY0ldwWkxo7xv8iM6nvjjIoy%2BHYH86JM6od9vodhCBdiqOLEpPHdpTLX5MDyIjV9kbsCupAbwz8L4zP%2BI7lSc%2BD21hBKdhu7jkVlupYSKryijW9QH8MEmnoNxDGDu6hmsaXwpCK7u0i1wL0iYHId%2B%2FTHkMm72e7JbelUATsaA3PSd6ijhxB8Ur7%2Bfx39rkZphXP3uThwSdi%2Fhz0EjRnZTkVUniI92qT5N8SAJNIKqRNwvXKKMhnNmIlXHsgPCTXNfwXL%2Fn0P%2FtqQ%2F02cHUR1OQDnutcIFPspIWlL60HQpTrctMoNniV%2FBrLyqHI2uEMDjv5vhLIG0Pt5AC9cORCuX7ZtpLLiOBxih0rJeG23kt0KzVUIt5LrZ8viMTlHsrNDXFjjIfNCougEkF357v5ZnhyDO5MyyBXNn0Ed4TF23PWaluu9BmsiKzveAOS6ARgo15zKem8Aa6vVgykuJYNCv1i0Mm0zwRaAuI9s7DLO43MgkrheUlB5agn3u%2FV0meCbS3GbbKzkSDJqd%2Bl1fFtst4Qm9SdOwl2djumUAjFDsMYhsNmZMNQCmu5xzYSGXWNGeui9dUWRFohHJdEz7ny1VeAUrxPOSA0P8oIlO5ut7Mks%2FKDdsPHEoaBnzvRNj5Q4WX%2FL3mgCRQLKb53cEx6xKYVCvsAzCSihT7DU5nq21c6dcK3yXQAcR4aSfGS49znkvXLHKAaQFOZ1uYRYpBUf2XQEdUbdUpeCeGOw3D0aV4roIf%2FSW5kmfMzZlAu9UU%2FfR0yFpePPkXoqZmWrx550Ubfp0PLXKuQh0lzKwtnLt7L5RrcPxK10E5sB6btE7laJO9rmFQqA%2BPvBHoYOOduBDVww%2Bd59J1aw4IvURsncW19e%2FnM0%2FyTqBRzj4qNCGtIHLPfCpbvLJkMUWrLsu2k%2B7F3kAINMBYgTuG4n23gcSQ51J6yYaA4pivCkwXoJvQGhACxAfssAByOiUSi0HkuIChCk18J1n4IJuyjiEIBQMn0Cgt6zt2pc1xs3ilKQgjCksmNnzlyHy0MtOmwAelowqBjvLS3T4VpXEpWqo47mfEuT78VG%2FFiWyY9ohDk5WcKoHGJlm3vIp6e7%2BP5vRlILJSyc6gYVpRXS4Murp0M0KdQEcJWfPgaIpsnIuPxCCTv%2BD4F9l1JYl1FdfVh%2FahOzQCU4my1yAIzUWT6tBU%2F4K8Nx%2B0WVZQhH8a1AzxbOwuCAIdhe115xy%2FGBXtDFSvykfiOVq4XM3wFwuODOJ2ilorsTnSZpdYoXgVFIGpOYDBgJmYvmHGWI%2FB3%2FjUMJV7EczGo4dRKzxK1k5%2F4OozFXc29m5hwRKYaoJ0deyF7dzMFPjjQepkZGoAW3uY8x54NWQ%2FjiH%2BR7AP2fOpOhTqfVEQ6JZ5WJQyCRl%2BAP4moiF0IIjdBVXvToi79Q9bHzP1n0oj1IP7GMK7EL8bcWJoOH2INO%2Fi%2Fl2Kbn7HnrTlBlTgfv8Hnjr9waey%2B%2BkAAAAASUVORK5CYII%3D%22`,
+      {
+        resource_type: assetInput.type,
+        overwrite: false,
+        invalidate: true,
       },
-      thumbnails: [
-        {
-          url:
-            'https://i.ytimg.com/vi/8HMzWwlIUXo/hqdefault.jpg?sqp=-oaymwEYCKgBEF5IVfKriqkDCwgBFQAAiEIYAXAB&rs=AOn4CLCZVaOEl3gVyNRAZFVv_lFvoo4leA',
-          width: 168,
-          resolution: '168x94',
-          id: '0',
-          height: 94,
-        },
-        ...
-      ],
-      license: null,
-      artist: '박재범 Jay Park',
-      url:
-        'https://r5---sn-ni5f-t8gs.googlevideo.com/videoplayback?expire=1593479275&ei=Czz6XvaeEcWrkwaC3piYAw&ip=24.84.49.214&id=o-AFv9e3zUakHA-FPM1FVomzeaXzgwBrFljJfH8HoMYPTX&itag=22&source=youtube&requiressl=yes&mh=j7&mm=31%2C26&mn=sn-ni5f-t8gs%2Csn-vgqsrne6&ms=au%2Conr&mv=m&mvi=4&pl=22&initcwndbps=1951250&vprv=1&mime=video%2Fmp4&ratebypass=yes&dur=146.982&lmt=1576328437478785&mt=1593457595&fvip=5&c=WEB&txp=5535432&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cvprv%2Cmime%2Cratebypass%2Cdur%2Clmt&lsparams=mh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AG3C_xAwRQIhAL9TANGULY1NeEIEvzMmVOenY7o1dT2ByOuL5cWHS6P7AiAGk0N121X4DEn1T7NUheKFlqvUKGF3LzDfGckkmTnDCQ%3D%3D&sig=AOq0QJ8wRAIgAs0z56S2zOZOjgTNrnFmgKcF-TKJIFSYcw37m1_e6ZMCICKqOSosBKolZ3HCZQGrYXViVIADq6AbvMKQzNkjeWTH',
-      age_limit: 0,
-      release_date: null,
-      alt_title: '몸매 Mommae (Feat. Ugly Duck)',
-      thumbnail: 'https://i.ytimg.com/vi_webp/8HMzWwlIUXo/maxresdefault.webp',
-      channel_id: 'UCO_HutTdw0PTxGPK7FG1fRA',
-      is_live: null,
-      width: 1280,
-      end_time: null,
-      webpage_url: 'https://www.youtube.com/watch?v=8HMzWwlIUXo',
-      formats: [
-        {
-          asr: 48000,
-          tbr: 49.409,
-          protocol: 'https',
-          format: '249 - audio only (tiny)',
-          url:
-            'https://r5---sn-ni5f-t8gs.googlevideo.com/videoplayback?expire=1593479275&ei=Czz6XvaeEcWrkwaC3piYAw&ip=24.84.49.214&id=o-AFv9e3zUakHA-FPM1FVomzeaXzgwBrFljJfH8HoMYPTX&itag=249&source=youtube&requiressl=yes&mh=j7&mm=31%2C26&mn=sn-ni5f-t8gs%2Csn-vgqsrne6&ms=au%2Conr&mv=m&mvi=4&pl=22&initcwndbps=1951250&vprv=1&mime=audio%2Fwebm&gir=yes&clen=859467&dur=146.941&lmt=1576325741938469&mt=1593457595&fvip=5&keepalive=yes&c=WEB&txp=5531432&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cvprv%2Cmime%2Cgir%2Cclen%2Cdur%2Clmt&lsparams=mh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AG3C_xAwRgIhAKcrXl24iRknz9LYLa-SqxV3nZJfwUZ9inXNGVInj5ZgAiEAxM8ng1Jc7QvJltN3bIW5c6NW2c4yzzIyyFvm0Eyfk7w%3D&sig=AOq0QJ8wRAIgQpkxF0xfSH3h37csTDxXxSkcaCDaNQB6z9qZc4Reo1YCIElS04ogip5XMemGzWsnfYMWFWjQG-qwbS0VOgWIVTKh&ratebypass=yes',
-          vcodec: 'none',
-          format_note: 'tiny',
-          abr: 50,
-          player_url: '/s/player/68f00b39/player_ias.vflset/en_US/base.js',
-          downloader_options: [Object],
-          width: null,
-          ext: 'webm',
-          filesize: 859467,
-          fps: null,
-          format_id: '249',
-          height: null,
-          http_headers: [Object],
-          acodec: 'opus',
-        },
-        ...
-      ],
-      channel_url: 'http://www.youtube.com/channel/UCO_HutTdw0PTxGPK7FG1fRA',
-      vcodec: 'avc1.64001F',
-      _duration_raw: 147,
-      _duration_hms: '00:02:27',
-    }
-    */
-
-    // const notSupportedError = 'Video URL not supported.  Please try uploading the video from your computer.';
-
-    return new Promise(async (resolve, reject) => {
-      try {
-        // const youTubeDlPath = 'dist/youtube-dl';
-        // const youtubeDlWrap = new YoutubeDlWrap(youTubeDlPath);
-
-        let info: ScrapedVideoMetadata;
-        const data: ScrapedVideoMetadata | ScrapedVideoMetadata[] = [];
-
-        if (Array.isArray(data)) {
-          info = (data as ScrapedVideoMetadata[])[0];
-        } else {
-          info = data as ScrapedVideoMetadata;
-        }
-
-        console.log('VIDEO SCRAPER INFO: ', info);
-
-        if (info.thumbnail) {
-          // Thumbnail can be WEBP format - YouTube lies in the URL as to the
-          // type of file.  We will instead host it oursleves by downloading it to S3
-          // and create an IMGIX URL
-
-          info.thumbnail = await this.newAssetFromUrl(
-            {
-              entity: AssetEntity.team,
-              entityId: teamId,
-              name: 'scrapedMainMedia',
-              image: {
-                height: 500,
-                width: 300,
-                hint: ImageHint.forceJpeg,
-              },
-            },
-            info.thumbnail
-          );
-        }
-
-        resolve(info);
-      } catch (err) {
-        console.error(`ERROR: Scraping ${url}: `, JSON.stringify(err));
-
-        const genericError = (msg?: string) => {
-          return `${msg ?? 'Unable to find video in URL'} - Try uploading a local file.`;
-        };
-
-        const matchesYouTubeSaid = err.stderr.match(/Youtube said:\s*(.*\n)+/i);
-        if (matchesYouTubeSaid && matchesYouTubeSaid.length > 1) {
-          // Extract error
-          return reject(new ApolloError(genericError(matchesYouTubeSaid[1])));
-        } else {
-          const matchesError = err.stderr.match(/ERROR:\s*(.*\n)+/i);
-          if (matchesError && matchesError.length > 1) {
-            // Extract error
-            return reject(new ApolloError(genericError(matchesError[1])));
-          }
-        }
-
-        return reject(new ApolloError(genericError(JSON.stringify(err))));
+      function (error, result) {
+        console.log(error, result);
       }
-    });
-  }
+    );
 
-  public async createUploadUrl(asset: AssetInput): Promise<AssetUrls> {
-    let type: AssetEntity = AssetEntity.ewebinar;
-
-    if (!asset.entityId) {
-      // The only case where scopeId might not be present is for Invited Users.
-      // Teams and EWebinars are created before any media is set uploaded.
-
-      if (asset.entity !== AssetEntity.user) {
-        throw new ApolloError('No scope ID specified for Asset upload');
-      }
+    if (!result) {
+      return undefined;
     }
-
-    if (!asset.image) {
-      throw new ApolloError('No ImageAsset data passed in');
-    }
-
-    const image = asset.image;
-
-    switch (asset.entity) {
-      case AssetEntity.user:
-        type = AssetEntity.user;
-        break;
-      case AssetEntity.team:
-        type = AssetEntity.team;
-        break;
-      default:
-        type = AssetEntity.ewebinar;
-    }
-
-    const filepath = `drafts/${type}/${asset.entityId}/${asset.name}-${new Date().getTime()}-draft`;
-    const uploadUrl = '';
-
-    const imgClient = new ImgixClient({
-      domain: config.IMGIX_DOMAIN,
-      secureURLToken: config.IMGIX_SECURE_TOKEN,
-    });
-
-    let buildParams: any = {
-      fit: 'clip',
-      w: image.width,
-      h: image.height,
-      dpr: 2,
-    };
-
-    switch (image.hint) {
-      case ImageHint.profile:
-        buildParams = {
-          ...buildParams,
-          fit: 'facearea',
-          faceindex: 1,
-          facepad: 5,
-          mask: 'ellipse',
-          fm: 'png',
-        };
-        break;
-    }
-
-    const url = imgClient.buildURL(filepath, buildParams);
-
-    const draftAsset = this.create({ url, ...asset });
-    await this.save(draftAsset);
-
-    return new AssetUrls(url, uploadUrl);
-  }
-
-  public async newAssetFromUrl(asset: AssetInput, url: string): Promise<string | null> {
-    let type: AssetEntity = AssetEntity.ewebinar;
-
-    if (!asset.entityId) {
-      // The only case where scopeId might not be present is for Invited Users.
-      // Teams and EWebinars are created before any media is set uploaded.
-
-      if (asset.entity !== AssetEntity.user) {
-        throw new ApolloError('No scope ID specified for Asset upload');
-      }
-    }
-
-    if (!asset.image) {
-      throw new ApolloError('No ImageAsset data passed in');
-    }
-
-    const image = asset.image;
-
-    switch (asset.entity) {
-      case AssetEntity.user:
-        type = AssetEntity.user;
-        break;
-      case AssetEntity.team:
-        type = AssetEntity.team;
-        break;
-      default:
-        type = AssetEntity.ewebinar;
-    }
-
-    const filepath = `${type}/${asset.entityId}/${asset.name}-${new Date().getTime()}`;
-    try {
-    //   await s3.UploadFromUrlToS3(url, filepath);
-    } catch (e) {
-      console.warn('WARNING: Unable to download scraped thumbnail: ', url);
-      return null;
-    }
-
-    const imgClient = new ImgixClient({
-      domain: config.IMGIX_DOMAIN,
-      secureURLToken: config.IMGIX_SECURE_TOKEN,
-    });
-
-    let buildParams: any = {
-      fit: 'clip',
-      w: image.width,
-      h: image.height,
-      dpr: 2,
-    };
-
-    switch (image.hint) {
-      case ImageHint.profile:
-        buildParams = {
-          ...buildParams,
-          fit: 'facearea',
-          faceindex: 1,
-          facepad: 5,
-          mask: 'ellipse',
-          fm: 'png',
-        };
-        break;
-
-      case ImageHint.forceJpeg:
-        buildParams = {
-          ...buildParams,
-          fm: 'jpg',
-          bg: 'FFFFFF',
-        };
-    }
-
-    return imgClient.buildURL(filepath, buildParams);
-  }
-
-  public async makeAssetPermanent(draftUrl: string, origUrl?: string): Promise<string> {
-    const url = new URL(draftUrl);
-
-    const oldPathname = url.pathname;
-    // Remove /drafts and -draft
-    const newPathname = `/${oldPathname
-      .substr(0, oldPathname.length - '-draft'.length)
-      .split('/')
-      .slice(2)
-      .join('/')}`;
-
-    console.log('makeAssetPermanent: ', oldPathname, ' -> ', newPathname);
-
-    let params = url.search.replace(/s=[^&]+&?/, ''); // Same param set minus signature
-    if (config.IMGIX_SECURE_TOKEN) {
-      const imgClient = new ImgixClient({
-        domain: config.IMGIX_DOMAIN,
-        secureURLToken: config.IMGIX_SECURE_TOKEN,
-      });
-
-      params = imgClient._signParams(newPathname, params);
-    }
-    const newUrl = `https://${config.IMGIX_DOMAIN}${newPathname}${params}`;
-
-    // if (await s3.fileExists(`${config.ASSETS_S3_BUCKET}${oldPathname}`)) {
-    //   await s3.renameFile(
-    //     `${config.ASSETS_S3_BUCKET}${oldPathname}`,
-    //     `${config.ASSETS_S3_BUCKET}${newPathname}`
-    //   );
-    // }
-
-    const draftAsset = await this.findOne({ url: draftUrl });
-    const newAsset = await this.create({ ...draftAsset, url: newUrl });
-    await this.save(newAsset);
-
-    if (draftAsset) {
-      await this.remove(draftAsset);
-    } else {
-      console.error(`ERROR: Asset with url ${draftAsset} not found in asset table.`);
-    }
-
-    // TODO: Increment on webinar dup
-    await this.decrement({ url: origUrl }, 'useCount', 1);
-
-    return newUrl;
+    const asset = this.create(assetInput);
+    return await this.save(asset);
   }
 }
