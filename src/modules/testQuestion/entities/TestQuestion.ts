@@ -19,6 +19,8 @@ export class TestQuestion extends ORMObject<TestQuestion> {
       test => test.testQuestions,
     )
     public test!: Test;
+    @RelationId((testQuestion: TestQuestion) => testQuestion.test)
+    public testId!: string;
 
     @Field(_type => Question)
     @OneToOne(
@@ -43,6 +45,10 @@ export class TestQuestion extends ORMObject<TestQuestion> {
     @RelationId((testQuestion: TestQuestion) => testQuestion.part)
     public partId!: string;
     
+    @Field(_type => Number)
+    @Column({default: 0})
+    public order!: number;
+
     @Field()
     @CreateDateColumn()
     public createdAt!: Date;
@@ -69,3 +75,26 @@ export class TestQuestionInputId {
   @Field(_type => String, {nullable: true})
   public questionId?: string;
 }
+
+@InputType()
+export class PartIdAndQuestionIdsInput {
+
+  @Field(_type => String, {nullable: true})
+  public partId?: string;
+
+  @Field(_type => [String])
+  public questionIds!: string[];
+}
+
+@InputType()
+export class TestQuestionInputIds {
+
+  @Field(_type => String, {nullable: true})
+  public testId?: string;
+
+  @Field(_type => [PartIdAndQuestionIdsInput])
+  public partIdAndQuestionIdsInput!: PartIdAndQuestionIdsInput[];
+
+}
+
+

@@ -1,9 +1,8 @@
 import { ObjectType, Field, registerEnumType, InputType } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, OneToMany, DeleteDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, RelationId } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, OneToMany, DeleteDateColumn, UpdateDateColumn } from "typeorm";
 import { ORMObject } from "../../../types/ORMObject";
-import { TestQuestion } from "../../testQuestion/entities/TestQuestion";
+import { TestQuestion, TestQuestionInputIds } from "../../testQuestion/entities/TestQuestion";
 import { Part, EnglishCertificateType } from "../../part/entities/Part";
-import { TestCategory } from "./TestCategory";
 
 export enum SkillsType {
   Reading = 'Reading',
@@ -16,7 +15,7 @@ registerEnumType(SkillsType, {
 
 @ObjectType()
 @InputType('AudioSecondsInput')
-export class AudioSeconds {
+export class PartAndAudioSeconds {
   @Field({ nullable: true })
   public partId?: string;
 
@@ -24,6 +23,7 @@ export class AudioSeconds {
   public autdioSecs?: number;
 
 }
+
 
 @ObjectType()
 @Entity()
@@ -48,9 +48,10 @@ export class Test extends ORMObject<Test> {
   @Column()
   public certificateType!: EnglishCertificateType;
 
-  @Field(_type => [AudioSeconds], { nullable: true })
+  @Field(_type => [PartAndAudioSeconds], { nullable: true })
   @Column({ type: 'json', nullable: true })
-  public audioPartSecs?: AudioSeconds[];
+  public partAndAudioSecs?: PartAndAudioSeconds[];
+
 
   @Field(_type => [TestQuestion], { nullable: true })
   @OneToMany(
@@ -69,20 +70,14 @@ export class Test extends ORMObject<Test> {
   )
   public part?: Promise<Part>;
 
-  @Field(_type => TestCategory)
-  @ManyToOne(
-    _type => TestCategory,
-    testCategory => testCategory.test,
-    { cascade: true }
-  )
-  @JoinColumn()
-  public testCategory!: TestCategory;
-  @RelationId((test: Test) => test.testCategory)
-  public testCategoryId!: string;
 
   @Field(_type => Boolean)
   @Column({ default: false })
   public isPublished!: boolean;
+
+  @Field(_type => Number)
+  @Column({ default: 0 })
+  public order!: number;
 
   @Field()
   @CreateDateColumn()
@@ -99,7 +94,7 @@ export class Test extends ORMObject<Test> {
 
 }
 @InputType()
-export class NewTestInput implements Partial<Test> {
+export class NewTestInput {
   @Field({ nullable: true })
   public id?: string;
 
@@ -118,6 +113,10 @@ export class NewTestInput implements Partial<Test> {
   @Field({ nullable: true })
   public isPublished?: boolean;
 
-  @Field(_type => [AudioSeconds], { nullable: true })
-  public autdioPartSecs?: AudioSeconds[];
+  @Field(_type => [PartAndAudioSeconds], { nullable: true })
+  public partAndAudioSecs?: PartAndAudioSeconds[];
+
+  @Field(_type => TestQuestionInputIds, { nullable: true })
+  public testQuestionInputIds?: TestQuestionInputIds;
+
 }

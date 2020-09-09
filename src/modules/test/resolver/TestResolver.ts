@@ -14,11 +14,6 @@ export class TestResolver {
     return await this.testRepository.findOne(id);
   }
 
-  @Authorized()
-  @Query(_type => [Test])
-  public async tests(@Arg('testCategoryId') testCategoryId: string): Promise<Test[] | undefined> {
-    return await this.testRepository.find({testCategoryId});
-  }
 
   @Authorized()
   @Mutation(_returns => Test)

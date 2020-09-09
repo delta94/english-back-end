@@ -54,6 +54,10 @@ export class Part extends ORMObject<Part> {
   })
   public test?: Promise<Test>;
 
+  @Field(_type => Number)
+  @Column({ default: 0 })
+  public order!: number;
+
   @Field()
   @CreateDateColumn()
   public createdAt!: Date;

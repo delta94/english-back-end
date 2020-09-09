@@ -17,7 +17,12 @@ export class QuestionResolver {
   @Authorized()
   @Query(_type => [Question])
   public async questions(@Arg('questionFilterType') data: QuestionFilterType): Promise<Question[] | undefined> {
-      return await this.questionRepository.find(data);
+      return await this.questionRepository.find({
+        where: data,
+        order: {
+          updatedAt: 'DESC',
+        }
+      });
   }
 
 

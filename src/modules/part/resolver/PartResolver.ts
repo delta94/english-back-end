@@ -17,7 +17,13 @@ export class PartResolver {
   @Authorized()
   @Query(_type => [Part])
   public async parts(@Arg('certificateType') certificateType: EnglishCertificateType): Promise<Part[] | undefined> {
-    return await this.partRepository.find({certificateType});
+    return await this.partRepository.find({
+      where : {certificateType},
+      order: {
+        order: 'ASC',
+        createdAt: 'DESC',
+      },
+    });
   }
 
 

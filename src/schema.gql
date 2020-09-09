@@ -26,11 +26,6 @@ input AssetInput {
   type: MediaType!
 }
 
-type AudioSeconds {
-  autdioSecs: Float
-  partId: String
-}
-
 input AudioSecondsInput {
   autdioSecs: Float
   partId: String
@@ -87,13 +82,14 @@ input NewQuestionInput {
 }
 
 input NewTestInput {
-  autdioPartSecs: [AudioSecondsInput!]
   certificateType: EnglishCertificateType
   description: String
   id: String
   isPublished: Boolean
+  partAndAudioSecs: [AudioSecondsInput!]
   skillType: SkillsType
   testName: String!
+  testQuestionInputIds: TestQuestionInputIds
 }
 
 type Part {
@@ -102,11 +98,22 @@ type Part {
   deleteAt: DateTime
   description: String!
   id: String!
+  order: Float!
   partName: String!
   skillType: SkillsType!
   test: TestQuestion
   testQuestion: Test
   updatedAt: DateTime!
+}
+
+type PartAndAudioSeconds {
+  autdioSecs: Float
+  partId: String
+}
+
+input PartIdAndQuestionIdsInput {
+  partId: String
+  questionIds: [String!]!
 }
 
 type Query {
@@ -115,7 +122,6 @@ type Query {
   question(id: String!): Question!
   questions(questionFilterType: QuestionFilterTypeInput!): [Question!]!
   test(id: String!): Test!
-  tests(testCategoryId: String!): [Test!]!
   user(id: String!): User!
   users: [User!]!
 }
@@ -162,29 +168,18 @@ type SocialLink {
 }
 
 type Test {
-  audioPartSecs: [AudioSeconds!]
   certificateType: EnglishCertificateType!
   createdAt: DateTime!
   deleteAt: DateTime
   description: String!
   id: String!
   isPublished: Boolean!
+  order: Float!
   part: Part
+  partAndAudioSecs: [PartAndAudioSeconds!]
   skillType: SkillsType!
-  testCategory: TestCategory!
   testName: String!
   testQuestions: [TestQuestion!]
-  updatedAt: DateTime!
-}
-
-type TestCategory {
-  certificateType: EnglishCertificateType!
-  createdAt: DateTime!
-  deleteAt: DateTime
-  id: String!
-  isPublished: Boolean!
-  test: [Test!]
-  testCategoryName: String!
   updatedAt: DateTime!
 }
 
@@ -192,10 +187,16 @@ type TestQuestion {
   createdAt: DateTime!
   deleteAt: DateTime
   id: String!
+  order: Float!
   part: Part!
   question: Question!
   test: Test!
   updatedAt: DateTime!
+}
+
+input TestQuestionInputIds {
+  partIdAndQuestionIdsInput: [PartIdAndQuestionIdsInput!]!
+  testId: String
 }
 
 type User {
