@@ -133,7 +133,8 @@ const bootstrap = async () => {
       context: ({ req, res }) => ({ req, res }),
       debug: process.env.NODE_ENV !== "production",
       //   plugins: [apolloLoggingPlugin],
-      // introspection: true, // Turned on for Gatsby build of webinar pages
+      introspection: true, // Turned on for Gatsby build of webinar pages,
+      playground: true,
       engine: {
         reportSchema: true,
         debugPrintReports: true,
