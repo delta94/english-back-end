@@ -31,6 +31,8 @@ export const config = {
     credentials: true,
     origin: [
       'http://localhost:3000',
+      'https://tingadev.github.io/english-front-end/',
+      'http://tingadev.xyz'
     ],
   },
 
