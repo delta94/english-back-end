@@ -4,10 +4,16 @@ import {
   Repository,
   SelectQueryBuilder,
   getCustomRepository,
+  DeleteResult,
 } from "typeorm";
 
 // import { ApolloError } from 'apollo-server-express';
-import { TestQuestion, TestQuestionInputId, TestQuestionInputIds, PartIdAndQuestionIdsInput } from "./entities/TestQuestion";
+import {
+  TestQuestion,
+  TestQuestionInputId,
+  TestQuestionInputIds,
+  PartIdAndQuestionIdsInput,
+} from "./entities/TestQuestion";
 import { PartRepository } from "../part/PartRepository";
 import { TestRepository } from "../test/TestRepository";
 import { QuestionRepository } from "../question/QuestionRepository";
@@ -27,19 +33,29 @@ export class TestQuestionRepository extends Repository<T> {
       super.createQueryBuilder("test_question", queryRunner)
     );
   }
+  public async getTestQuestions(
+    testId: string
+  ): Promise<TestQuestion[] | undefined> {
+    return await this.createQueryBuilder().where('test_question.testId = :testId', {testId}).getMany();
+  }
+
   public async updateOrCreateTestPart(
     testQuestionInputId: TestQuestionInputId,
     question: Question
   ): Promise<TestQuestion> {
-    const part = await getCustomRepository(PartRepository).findOne({id: testQuestionInputId.partId});
-    const test = await getCustomRepository(TestRepository).findOne({id: testQuestionInputId.testId});
+    const part = await getCustomRepository(PartRepository).findOne({
+      id: testQuestionInputId.partId,
+    });
+    const test = await getCustomRepository(TestRepository).findOne({
+      id: testQuestionInputId.testId,
+    });
     const testQuestion = new TestQuestion();
-    testQuestion.question = question;
+    testQuestion.question = Promise.resolve(question);
     if (part) {
-      testQuestion.part = part;
+      testQuestion.part = Promise.resolve(part);
     }
     if (test) {
-      testQuestion.test = test;
+      testQuestion.test = Promise.resolve(test);
     }
     await testQuestion.save();
     return testQuestion;
@@ -58,44 +74,58 @@ export class TestQuestionRepository extends Repository<T> {
     });
     const testQuestion = new TestQuestion();
     if (question) {
-      testQuestion.question = question;
+      testQuestion.question = Promise.resolve(question);
     }
     if (part) {
-      testQuestion.part = part;
+      testQuestion.part = Promise.resolve(part);
     }
     if (test) {
-      testQuestion.test = test;
+      testQuestion.test = Promise.resolve(test);
     }
-    await testQuestion.save();
-    return testQuestion;
+    return await testQuestion.save();
   }
 
+  public async removeTestQuestion(id: string): Promise<DeleteResult> {
+    const res = await this.createQueryBuilder()
+      .where("id = :id", { id })
+      .delete()
+      .execute();
+    return res;
+  }
   public async createListTestQuestions(
     testQuestionInputIds: TestQuestionInputIds
-  ): Promise<TestQuestion[] | undefined> {
-    const { testId ,partIdAndQuestionIdsInput } = testQuestionInputIds;
-    if(partIdAndQuestionIdsInput.length === 0){
-      return undefined;
-    }
+  ): Promise<TestQuestion[]> {
+    const { testId, partIdAndQuestionIdsInput } = testQuestionInputIds;
+   
+    const test = await getCustomRepository(TestRepository).findOne({
+      id: testId,
+    });
+    
     const testQuestions: TestQuestion[] = [];
-    partIdAndQuestionIdsInput.map((p: PartIdAndQuestionIdsInput) => {
-      if(p.questionIds.length > 0){
-        p.questionIds.map((e: string) => {
+    partIdAndQuestionIdsInput.map(async (p: PartIdAndQuestionIdsInput) => {
+      const part = await getCustomRepository(PartRepository).findOne({
+        id: p.partId,
+      });
+      if (p.questionIds.length > 0) {
+        p.questionIds.map(async (e: string) => {
+          const question = await getCustomRepository(QuestionRepository).findOne({
+            id: e,
+          });
           const testQuestion = new TestQuestion();
-          if(p.partId){
-            testQuestion.partId = p.partId;
+          if (p.partId) {
+            testQuestion.part = Promise.resolve(part!);
           }
-          if(testId){
-            testQuestion.testId = testId;
+          if (testId) {
+            testQuestion.test = Promise.resolve(test!);
           }
-          testQuestion.questionId = e;
+          testQuestion.question = Promise.resolve(question!);
+          await testQuestion.save();
           testQuestions.push(testQuestion);
         });
       }
-     
-
     });
+
+    console.log('testQuestions', testQuestions);
     return await this.save(testQuestions);
   }
-  
 }

@@ -1,5 +1,5 @@
 import { ObjectType, Field, InputType } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, JoinColumn, RelationId, ManyToOne, DeleteDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, JoinColumn, RelationId, ManyToOne, DeleteDateColumn, UpdateDateColumn } from "typeorm";
 import { ORMObject } from "../../../types/ORMObject";
 import { Question } from "../../question/entities/Question";
 import { Part } from "../../part/entities/Part";
@@ -17,19 +17,20 @@ export class TestQuestion extends ORMObject<TestQuestion> {
     @ManyToOne(
       _type => Test,
       test => test.testQuestions,
+      {cascade: true}
     )
-    public test!: Test;
+    public test!:  Promise<Test>;
     @RelationId((testQuestion: TestQuestion) => testQuestion.test)
     public testId!: string;
 
     @Field(_type => Question)
-    @OneToOne(
+    @ManyToOne(
       _type => Question,
       question => question.testQuestion,
       { cascade: true }
     )
     @JoinColumn()
-    public question!: Question;
+    public question!: Promise<Question>;
     @RelationId((testQuestion: TestQuestion) => testQuestion.question)
     public questionId!: string;
 
@@ -40,7 +41,7 @@ export class TestQuestion extends ORMObject<TestQuestion> {
       { cascade: true }
     )
     @JoinColumn()
-    public part!: Part;
+    public part!:  Promise<Part>;
 
     @RelationId((testQuestion: TestQuestion) => testQuestion.part)
     public partId!: string;

@@ -44,12 +44,12 @@ export class Part extends ORMObject<Part> {
   @Column()
   public certificateType!: EnglishCertificateType;
 
-  @Field(_type => Test, { nullable: true })
-  @OneToMany(_type => Test, test => test.part, { nullable: true })
+  @Field(_type => TestQuestion, { nullable: true })
+  @OneToMany(_type => TestQuestion, testQuestion => testQuestion.part, { nullable: true })
   public testQuestion?: Promise<TestQuestion>;
 
-  @Field(_type => TestQuestion, { nullable: true })
-  @OneToOne(_type => TestQuestion, testQuestion => testQuestion.part, {
+  @Field(_type => Test, { nullable: true })
+  @OneToOne(_type => Test, test => test.part, {
     nullable: true,
   })
   public test?: Promise<Test>;

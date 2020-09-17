@@ -1,7 +1,7 @@
 import { Resolver, Authorized, Mutation, Arg, Query } from "type-graphql";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { QuestionRepository } from "../QuestionRepository";
-import { QuestionFilterType, Question, NewQuestionInput } from "../entities/Question";
+import { QuestionFilterType, Question, NewQuestionInput, Questions } from "../entities/Question";
 // import { AuthedContext } from "../../../auth/AuthedContext";
 
 @Resolver(_of => Question)
@@ -15,16 +15,10 @@ export class QuestionResolver {
   }
 
   @Authorized()
-  @Query(_type => [Question])
-  public async questions(@Arg('questionFilterType') data: QuestionFilterType): Promise<Question[] | undefined> {
-      return await this.questionRepository.find({
-        where: data,
-        order: {
-          updatedAt: 'DESC',
-        }
-      });
+  @Query(_type => Questions)
+  public async questions(@Arg('questionFilterType') data: QuestionFilterType): Promise<Questions> {
+      return await this.questionRepository.getQuestions(data);
   }
-
 
   @Authorized()
   @Mutation(_returns => Question)

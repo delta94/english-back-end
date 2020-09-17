@@ -4,14 +4,14 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  OneToOne,
   UpdateDateColumn,
-  DeleteDateColumn,
+  DeleteDateColumn, OneToMany
 } from "typeorm";
 import { ORMObject } from "../../../types/ORMObject";
 import { TestQuestion } from "../../testQuestion/entities/TestQuestion";
 import { SkillsType } from "../../test/entities/Test";
 import { EnglishCertificateType } from "../../part/entities/Part";
+import { OrderDirection } from "../../user/entities/UserFilter";
 
 export enum QuestionType {
   SingleChoice = "SingleChoice",
@@ -42,6 +42,15 @@ export class QuestionFilterType {
 
   @Field(_type => EnglishCertificateType)
   public certificateType!: EnglishCertificateType;
+
+  @Field(_type => OrderDirection, { nullable: true })
+  public orderDirection?: OrderDirection;
+
+  @Field({ nullable: true })
+  public cursor?: string;
+
+  @Field({ nullable: true })
+  public testId?: string;
 }
 
 @ObjectType()
@@ -84,7 +93,7 @@ export class Question extends ORMObject<Question> {
   public answers?: Answers[];
 
   @Field(_type => TestQuestion, { nullable: true })
-  @OneToOne(_type => TestQuestion, testQuestion => testQuestion.question, {
+  @OneToMany(_type => TestQuestion, testQuestion => testQuestion.question, {
     nullable: true,
   })
   public testQuestion?: Promise<TestQuestion>;
@@ -159,4 +168,16 @@ export class NewQuestionInput {
 
   @Field(_type => String, { nullable: true })
   public testId?: string;
+}
+
+@ObjectType()
+export class Questions {
+  @Field(_type => [Question])
+  public questions!: Question[];
+
+  @Field()
+  public total!: number;
+
+  @Field({ defaultValue: false })
+  public nextCursor?: string;
 }

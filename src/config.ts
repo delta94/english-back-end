@@ -32,7 +32,8 @@ export const config = {
     origin: [
       'http://localhost:3000',
       'https://tingadev.github.io/english-front-end/',
-      'http://tingadev.xyz'
+      'http://tingadev.xyz',
+      'http://powper.vn'
     ],
   },
 
@@ -48,7 +49,7 @@ export const config = {
 
   IMGIX_SECURE_TOKEN: process.env.IMGIX_SECURE_TOKEN || undefined,
   IMGIX_DOMAIN: process.env.IMGIX_DOMAIN || 'ewebinar-dev.imgix.net',
-  ASSETS_S3_BUCKET: process.env.ASSETS_S3_BUCKET || 'ewebinar-assets-dev',
+  ASSETS_S3_BUCKET: process.env.ASSETS_S3_BUCKET || 'tingadev',
 
 
 

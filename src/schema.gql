@@ -16,14 +16,15 @@ input AnswersInput {
 type Asset {
   createdAt: DateTime!
   name: String!
-  type: MediaType!
+  path: String!
+  type: String!
   url: String!
 }
 
 input AssetInput {
-  file: String!
   name: String!
-  type: MediaType!
+  type: String!
+  typeFolder: MediaType!
 }
 
 input AudioSecondsInput {
@@ -46,10 +47,13 @@ enum MediaType {
 }
 
 type Mutation {
+  createListTestQuestions(data: TestQuestionInputIds!): [TestQuestion!]!
   createPart(data: NewPartInput!): Part!
   createQuestion(data: NewQuestionInput!): Question!
   createTest(data: NewTestInput!): Test!
+  createTestQuestion(data: TestQuestionInputId!): TestQuestion!
   createUser(data: UserInput!): User!
+  removeTestQuestion(id: String!): String!
   updatePart(data: NewPartInput!): Part!
   updateQuestion(data: NewQuestionInput!): Question!
   updateTest(data: NewTestInput!, id: String!): Test!
@@ -92,6 +96,12 @@ input NewTestInput {
   testQuestionInputIds: TestQuestionInputIds
 }
 
+# Query Order Direction
+enum OrderDirection {
+  Asc
+  Desc
+}
+
 type Part {
   certificateType: EnglishCertificateType!
   createdAt: DateTime!
@@ -101,8 +111,8 @@ type Part {
   order: Float!
   partName: String!
   skillType: SkillsType!
-  test: TestQuestion
-  testQuestion: Test
+  test: Test
+  testQuestion: TestQuestion
   updatedAt: DateTime!
 }
 
@@ -117,10 +127,11 @@ input PartIdAndQuestionIdsInput {
 }
 
 type Query {
+  getTestQuestions(testId: String!): [TestQuestion!]!
   part(id: String!): Part!
   parts(certificateType: String!): [Part!]!
   question(id: String!): Question!
-  questions(questionFilterType: QuestionFilterTypeInput!): [Question!]!
+  questions(questionFilterType: QuestionFilterTypeInput!): Questions!
   test(id: String!): Test!
   user(id: String!): User!
   users: [User!]!
@@ -147,7 +158,16 @@ type Question {
 
 input QuestionFilterTypeInput {
   certificateType: EnglishCertificateType!
+  cursor: String
+  orderDirection: OrderDirection
   skillType: SkillsType
+  testId: String
+}
+
+type Questions {
+  nextCursor: String
+  questions: [Question!]!
+  total: Float!
 }
 
 enum QuestionType {
@@ -192,6 +212,12 @@ type TestQuestion {
   question: Question!
   test: Test!
   updatedAt: DateTime!
+}
+
+input TestQuestionInputId {
+  partId: String
+  questionId: String
+  testId: String
 }
 
 input TestQuestionInputIds {

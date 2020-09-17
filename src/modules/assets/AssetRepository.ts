@@ -4,9 +4,9 @@ import {
   Repository,
   SelectQueryBuilder,
 } from "typeorm";
+import { s3 } from "../../utils/s3Promises";
 import { Asset, AssetInput } from "./entities/Asset";
 // import { config } from '../../config';
-import cloudinary from "cloudinary";
 // tslint:disable
 // const YoutubeDlWrap = require('youtube-dl-wrap');
 
@@ -23,29 +23,13 @@ export class AssetRepository extends Repository<Asset> {
     );
   }
 
-  public async uploadMedia(assetInput: AssetInput): Promise<Asset | undefined> {
-    cloudinary.v2.config({
-      cloud_name: process.env.CLOUDINARY_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
-    });
-
-    const result = await cloudinary.v2.uploader.upload(
-      `%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAHAAAABwCAYAAADG4PRLAAAAAXNSR0IArs4c6QAADnpJREFUeAHtXQlwHMUV%2FX9HRsIYWYCllUwIRQKYEMdc5gq3w2VIIDZE6LCNDQRzuIpUgguogmCHCg7kgBSQYAJ2MOhAIbhswpGQYBXhSLjD7XAmRWytBDE2xpaDdn9ejzzrXWm0mp3d%2BbMrb1dJM9PHf%2F%2F32%2B7p7umDqUid9NxTR4nIJErwJGKaRMJ74loJc3YiEvyZK5tnONmAf5%2FhGX%2ByEXE%2FxfV9Yn6ZOPIqlfe9wFXN6%2ByoRfaPi0FfWfPgaLI2fZ0ocRSJHE1ChyDzd8mz7l2Q%2FSJ%2BBH%2BliPU015zzRJ7lByKuYAmUrvYjSBLfgdXHgaxDArF%2BeKFPI0onWdYyrq5fPXx0%2FRgFRaCsW15FW7aci5J2Pqq7r%2BlnR0bEp1Hyf0O11n3M9ZszxlQMLAgCpadtMsXleyCtWdF2v1B4h8oysspu4pr6d%2FwKyVe6UAmUrrYzkBnzUUUenS%2BDFOUIGkIryOIfc3Xj84q4aVChEChr22bD%2BCtA3H5p2hTrg6DhY%2FEirml4RNsEVQJR4g4HcXehqvyqtqEqeCJ%2FhG0XcV3jByp4AFEhUDa0jkMv7OcocTO1MLUycBCO0Bb8SG%2Bg2qrrmU%2FDfbAucAIl1n4x3nM3wowxwZpSYNJF%2FkVkzeG6c1YFqVlgBErPip2pb9MSlPGzgzSgsGVLAvYvpJrG65gZjZ78u0AIlK4O9OHiK6DuXvlXuRglyp9Jypq4rr4n39pH8i0QDZXzQN4rkFsiL5m5fCJx%2FGV7dCnpl5%2BbvBII8q6GWmhllpxLDoxHW6ATJJ7pEubbK28ESlfrTdDiOt%2BabA8JmcrRQl1uN%2BzyZG%2FO70ARYYq13wl9UHWWnOccEPkF1TZenmvjJncCu9paoHSTZ8VLEbflgNA96PTP2uaR%2FZ3vKtSUPAyJLQNkibzs870%2FBdNMibX9xG9yk853CUSD5Q6k%2F24u4KW0W3NAaB5K4m1%2B8sMXgSDvFoDN8wNYSuOaA6aT%2F22ubVzpGprBM2sC0Qy%2BDC2pmzPILAX5zQFJHM51zc9mkzwrAkHeRPRlXkDFu0M2IKW4nnPgP1ReMZF3mfaJ1xSeGzEiSytA3u9L5HnNWl%2Fxdqfe3rZsUnomkGLlN4O8fbMRXorrIweYTkXL9HKvKT1VobK25TTMn3zIq9BSvDzkgJWYzNXNLwwnaVgCpbtjDCXib0NQ7XDCSuH5zAF5laJlB2EGXDyT1OGrUImbjmaJvEy5GEgYplV292GmXmaXsQSi6jwMVeffM4sowFCRXoxR9OCdvcbWTmg87vcoQE0zqyS0iXaIT%2BDdZnw4VMSyoQJsf2YzSF3gTsyUhT9RhJ%2FChOAusiQGg81aiEFOPr63kuIcJSrDuor4MZioezLm6Rw7KGKheDCNps%2Bt26HON4dSacgSiHHOS%2FGrvXWohKH6Cz1PEXx3HGW18a7163PRxZ4N3rtlBrHMhZyJucgKLK3QCRhq63ST70qgSMcOFOv7ANVQnVui8PwwNYEi13Btw9%2BC0AHfNKfA5h9B9lFByM9BZieG2U5wS%2B9OYP9Msl%2B5JQjHT55FifsB1zQ9qYEv3a2nYtmaabwdoIHnCSMix7jZ705gV5t5ae7uSXCQkUQ%2BwrvtQo42Lg8SZijZEmuZhbWEeI3wzkPF0fOXx7m26RsD8QZ1IzAKcBEiFQB59ByVxSeFRZ7JKI42L0Mr%2FCAMIb41MOP0n3kKuMEayXQ3iEBKCL42hOyE7sZL%2BzCunrk2ZE1AYsO7WIl0KFqsj4atCyXowoE6pBEoPS1m5et%2BAyOpPgstBHmzVTGHAcMyso1YF2ia8kuGiRpwsJxjf1RIQUkjEH2kGSlh%2BrdCV4K8BfrAwyOaIS20BLHwNMRpk8wVFKuYnqptkkCRBRG8sJtTA1XvhW4HeTeoYvoBi6421VjWX879QLmmEUorZMlWKFpcp5BEwqrn%2F0LRhpNynWLnanAAnnY11lXxj5A%2Br2Fwu3w8107vNqYlSyDIMxsK6DuRj6FQU7GQZzKIeU4v%2Fp2ln1k2okW0JTm0to1AolNDUciiGc6vKRR8n6AYDXoNJXC%2Bz%2BQ5JpMTHQE2gdLdsg88Quj7SQdGF8Kqtp088H%2BtsW5C4tf8C%2FCdcqqTsr8EipVk1AkI%2FGo%2B%2BUTKwu9z5mDo1o%2BtF%2BQgwmdSrkKhO9Ak7icwsa1I%2BpToJ9lt6F91%2BUlYSGnQtcD3UnlMXac4n2Qw%2BwlkmaKugFX2M3XMoACFrw9K9JByt27NEpFYKz5wctWQEQMJkPaRUPqcrEH%2FtROl8G3nWem6v8GJoDm8rxJgCgxnNfcxJWHh3gpp27S3yMPlEQyQmhaoplvvZw2ApoK%2BsEapE0gU27APhs9EefDabIYz8hyPa3oLXyz%2BrWqZ0FdQhSqXQGH17agUM%2FVhRSw0XWSCGcD%2BoipoJPGEKp4mWISf1IRDid8d3Qh7e2ItXEzqa35PC0wdR%2BQdXUypBoE8Wg1U1JvaaqbZQKPLlQmkcaYE7qhmJdOHalghAHHldHxZoY1q0My7KZdAyrhQQ83wQIFEcR6PqULN9G09N%2FIJFFYc3%2BUoSqCiYxqliBYOFEvge4SmGmbegZ7XY6cm9HdfCBNk%2FWnuOZXwWM9xc4%2B43vQDcYqJmhujhhQakOjN4hYCgSSKBIruoEEYJGquQ2QBgcyua%2BmCsZ0rZcMDuwUjO3yp8lEHpqWwObdJxwl%2FYhoxigQCbfPnyoPnOnlpo%2FTFdW1jAYHOMmQ1OxNHqkFpAzENWnwSsAox8znpnwGDpIsXOj7dYwQ9JWTQ8q9greM3zDtQeemUHBusUeFIt3fpZz5OFZ3lNXyRt1argmKxpHS3na2LqYAW31SvgJIOEeHXI9gBxhCoO8SVoNnpmoyIp%2FN0rZDPcOjWmog9OVX%2FM8%2Fp2AFqb12Dg0OTnvaDIV23AWN26oAz3Qh0XfgJ%2B6r5L9F3hSZcoFhxuTpQ%2Ba7C%2BznrJ5Docdc4gXryBbKuZc9AIRSE4wiBAwAzTQFqIITNWT%2BBO1r6U8ONOr28eKBWxfRsH7mQkKXqOpsT0mrHPmNwbQJ5bP1%2FMSb6iroizKfI2vZw1iXmw9hY2zwMhByUD1FZyWB5yjnazqlCTfoQqlEDm1hsnwlvbovIydqO%2FTEr7MZwVOZVDm4KgZH7HE%2FVqzkPvs9qt6sjVWD%2FYPYSa%2B7rQOOvwr%2BUHFJa3OGkThLYv%2F%2BYvOcEqF7NjoHd7beoYvoEszeDiFX8Dk33cI6RFXqOqxuSw59JAvvt4bt82pV7MqFLsdnclbkLClhC9wSTR8k16gGjuYiX36Z6phM4Kr4MgZIaQfeeF2E7qWt1Mb2hYQdHS9a23o3cme0tRRCx5HMqL2tJlZxG4NadYcPpUjhaCS1ASVziPBbC1d4oNtb3KN55s8LVhx8YuD9qGoG2cpL4ZbhKGnSeg%2BN9nkFLrzpsXaSnYwJ2zX0ROp0Yti7Q4eaBOgwiEEe%2FYIWNvD4wYgjPR%2BDY0ldwWkxo7xv8iM6nvjjIoy%2BHYH86JM6od9vodhCBdiqOLEpPHdpTLX5MDyIjV9kbsCupAbwz8L4zP%2BI7lSc%2BD21hBKdhu7jkVlupYSKryijW9QH8MEmnoNxDGDu6hmsaXwpCK7u0i1wL0iYHId%2B%2FTHkMm72e7JbelUATsaA3PSd6ijhxB8Ur7%2Bfx39rkZphXP3uThwSdi%2Fhz0EjRnZTkVUniI92qT5N8SAJNIKqRNwvXKKMhnNmIlXHsgPCTXNfwXL%2Fn0P%2FtqQ%2F02cHUR1OQDnutcIFPspIWlL60HQpTrctMoNniV%2FBrLyqHI2uEMDjv5vhLIG0Pt5AC9cORCuX7ZtpLLiOBxih0rJeG23kt0KzVUIt5LrZ8viMTlHsrNDXFjjIfNCougEkF357v5ZnhyDO5MyyBXNn0Ed4TF23PWaluu9BmsiKzveAOS6ARgo15zKem8Aa6vVgykuJYNCv1i0Mm0zwRaAuI9s7DLO43MgkrheUlB5agn3u%2FV0meCbS3GbbKzkSDJqd%2Bl1fFtst4Qm9SdOwl2djumUAjFDsMYhsNmZMNQCmu5xzYSGXWNGeui9dUWRFohHJdEz7ny1VeAUrxPOSA0P8oIlO5ut7Mks%2FKDdsPHEoaBnzvRNj5Q4WX%2FL3mgCRQLKb53cEx6xKYVCvsAzCSihT7DU5nq21c6dcK3yXQAcR4aSfGS49znkvXLHKAaQFOZ1uYRYpBUf2XQEdUbdUpeCeGOw3D0aV4roIf%2FSW5kmfMzZlAu9UU%2FfR0yFpePPkXoqZmWrx550Ubfp0PLXKuQh0lzKwtnLt7L5RrcPxK10E5sB6btE7laJO9rmFQqA%2BPvBHoYOOduBDVww%2Bd59J1aw4IvURsncW19e%2FnM0%2FyTqBRzj4qNCGtIHLPfCpbvLJkMUWrLsu2k%2B7F3kAINMBYgTuG4n23gcSQ51J6yYaA4pivCkwXoJvQGhACxAfssAByOiUSi0HkuIChCk18J1n4IJuyjiEIBQMn0Cgt6zt2pc1xs3ilKQgjCksmNnzlyHy0MtOmwAelowqBjvLS3T4VpXEpWqo47mfEuT78VG%2FFiWyY9ohDk5WcKoHGJlm3vIp6e7%2BP5vRlILJSyc6gYVpRXS4Murp0M0KdQEcJWfPgaIpsnIuPxCCTv%2BD4F9l1JYl1FdfVh%2FahOzQCU4my1yAIzUWT6tBU%2F4K8Nx%2B0WVZQhH8a1AzxbOwuCAIdhe115xy%2FGBXtDFSvykfiOVq4XM3wFwuODOJ2ilorsTnSZpdYoXgVFIGpOYDBgJmYvmHGWI%2FB3%2FjUMJV7EczGo4dRKzxK1k5%2F4OozFXc29m5hwRKYaoJ0deyF7dzMFPjjQepkZGoAW3uY8x54NWQ%2FjiH%2BR7AP2fOpOhTqfVEQ6JZ5WJQyCRl%2BAP4moiF0IIjdBVXvToi79Q9bHzP1n0oj1IP7GMK7EL8bcWJoOH2INO%2Fi%2Fl2Kbn7HnrTlBlTgfv8Hnjr9waey%2B%2BkAAAAASUVORK5CYII%3D%22`,
-      {
-        resource_type: assetInput.type,
-        overwrite: false,
-        invalidate: true,
-      },
-      function (error, result) {
-        console.log(error, result);
-      }
-    );
-
-    if (!result) {
-      return undefined;
-    }
-    const asset = this.create(assetInput);
-    return await this.save(asset);
+  public async createUploadUrl(assetInput: AssetInput): Promise<Asset> {
+    const time = new Date().getTime();
+    const filepath = `${assetInput.typeFolder}/${assetInput.name}-${time}`;
+    const url = await s3.uploadDraftFile(filepath, assetInput.type);
+    const draftAsset = this.create({url, path: filepath, ...assetInput});
+    await this.save(draftAsset);
+   
+    return draftAsset;
   }
 }

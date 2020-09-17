@@ -1,3 +1,4 @@
+import { IsIn } from 'class-validator';
 import { ObjectType, registerEnumType } from 'type-graphql';
 import { InputType, Field } from 'type-graphql';
 import { CreateDateColumn, Column, Entity, PrimaryColumn } from 'typeorm';
@@ -25,9 +26,14 @@ export class Asset extends ORMObject<Asset> {
   @Column()
   public name!: string;
 
-  @Field(_type => MediaType)
+  @Field()
   @Column()
-  public type!: MediaType;
+  public path!: string;
+
+  @Field(_type => String)
+  @IsIn(['image/jpeg', 'image/png', 'image/svg+xml', 'video/mp4', 'audio/mpeg'])
+  @Column()
+  public type!: string;
 
   @Field()
   @CreateDateColumn()
@@ -39,10 +45,10 @@ export class AssetInput {
 
   @Field()
   public name!: string;
-
-  @Field()
-  public file!: string;
+  
+  @Field(_type => String)
+  public type!: string;
 
   @Field(_type => MediaType)
-  public type!: MediaType;
+  public typeFolder!: MediaType;
 }
