@@ -17,6 +17,9 @@ import { config } from "./config";
 import { createSchema } from "./utils/createSchema";
 import _ from "lodash";
 import { MiddlewareFn } from "type-graphql";
+import ImgRouter from "./uploadMulter";
+
+// import cors from 'cors';
 // import shortid from 'shortid';
 
 // initialize configuration
@@ -140,20 +143,18 @@ const bootstrap = async () => {
         debugPrintReports: true,
       },
     });
-
+ 
     const app = express();
     // app.use(logger(process.env.NODE_ENV !== 'local' ? 'tiny' : 'dev'));
     // app.use(cookieParser());
     app.use(bodyParser.urlencoded({ limit: "60mb", extended: true }));
     app.use(bodyParser.json({ limit: "60mb" }));
     // app.use(authorizeToken);
-
     server.applyMiddleware({ app, cors: config.cors });
-
+    app.use('/public',express.static("public"));
     app.use("/healthcheck", require("express-healthcheck")());
-    // app.use('/v1', v1Router);
-    app.use("/", require("express-healthcheck")());
-
+    app.use('/uploads', ImgRouter);
+  
     const port = config.port;
     app.listen({ port }, () =>
       // tslint:disable-next-line: no-console

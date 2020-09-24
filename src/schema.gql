@@ -56,7 +56,8 @@ type Mutation {
   removeTestQuestion(id: String!): String!
   updatePart(data: NewPartInput!): Part!
   updateQuestion(data: NewQuestionInput!): Question!
-  updateTest(data: NewTestInput!, id: String!): Test!
+  updateTest(data: NewTestInput!): Test!
+  updateTestQuestion(data: TestQuestionInputId!): TestQuestion!
   uploadMedia(data: AssetInput!): Asset!
 }
 
@@ -88,6 +89,7 @@ input NewQuestionInput {
 input NewTestInput {
   certificateType: EnglishCertificateType
   description: String
+  explaination: String
   id: String
   isPublished: Boolean
   partAndAudioSecs: [AudioSecondsInput!]
@@ -107,8 +109,8 @@ type Part {
   createdAt: DateTime!
   deleteAt: DateTime
   description: String!
+  displayOrder: Float!
   id: String!
-  order: Float!
   partName: String!
   skillType: SkillsType!
   test: Test
@@ -192,9 +194,10 @@ type Test {
   createdAt: DateTime!
   deleteAt: DateTime
   description: String!
+  displayOrder: Float!
+  explaination: String!
   id: String!
   isPublished: Boolean!
-  order: Float!
   part: Part
   partAndAudioSecs: [PartAndAudioSeconds!]
   skillType: SkillsType!
@@ -206,8 +209,8 @@ type Test {
 type TestQuestion {
   createdAt: DateTime!
   deleteAt: DateTime
+  displayOrder: Float!
   id: String!
-  order: Float!
   part: Part!
   question: Question!
   test: Test!
@@ -215,6 +218,8 @@ type TestQuestion {
 }
 
 input TestQuestionInputId {
+  displayOrder: Float
+  id: String
   partId: String
   questionId: String
   testId: String

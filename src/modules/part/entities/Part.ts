@@ -56,7 +56,7 @@ export class Part extends ORMObject<Part> {
 
   @Field(_type => Number)
   @Column({ default: 0 })
-  public order!: number;
+  public displayOrder!: number;
 
   @Field()
   @CreateDateColumn()

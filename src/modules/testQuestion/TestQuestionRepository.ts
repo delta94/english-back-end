@@ -36,7 +36,10 @@ export class TestQuestionRepository extends Repository<T> {
   public async getTestQuestions(
     testId: string
   ): Promise<TestQuestion[] | undefined> {
-    return await this.createQueryBuilder().where('test_question.testId = :testId', {testId}).getMany();
+    return await this.createQueryBuilder()
+      .where("test_question.testId = :testId", { testId })
+      .orderBy("displayOrder", "ASC")
+      .getMany();
   }
 
   public async updateOrCreateTestPart(
@@ -92,15 +95,27 @@ export class TestQuestionRepository extends Repository<T> {
       .execute();
     return res;
   }
+
+  public async updateTestQuestion(
+    data: TestQuestionInputId
+  ): Promise<TestQuestion | undefined> {
+    const { id, ...dataUpdate } = data;
+    const testQuestion = await this.findOne(id);
+    if (!testQuestion) {
+      return undefined;
+    }
+    testQuestion.updateWith({ ...dataUpdate });
+    return testQuestion;
+  }
   public async createListTestQuestions(
     testQuestionInputIds: TestQuestionInputIds
   ): Promise<TestQuestion[]> {
     const { testId, partIdAndQuestionIdsInput } = testQuestionInputIds;
-   
+
     const test = await getCustomRepository(TestRepository).findOne({
       id: testId,
     });
-    
+
     const testQuestions: TestQuestion[] = [];
     partIdAndQuestionIdsInput.map(async (p: PartIdAndQuestionIdsInput) => {
       const part = await getCustomRepository(PartRepository).findOne({
@@ -108,7 +123,9 @@ export class TestQuestionRepository extends Repository<T> {
       });
       if (p.questionIds.length > 0) {
         p.questionIds.map(async (e: string) => {
-          const question = await getCustomRepository(QuestionRepository).findOne({
+          const question = await getCustomRepository(
+            QuestionRepository
+          ).findOne({
             id: e,
           });
           const testQuestion = new TestQuestion();
@@ -125,7 +142,6 @@ export class TestQuestionRepository extends Repository<T> {
       }
     });
 
-    console.log('testQuestions', testQuestions);
     return await this.save(testQuestions);
   }
 }

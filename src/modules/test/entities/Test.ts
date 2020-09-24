@@ -40,6 +40,10 @@ export class Test extends ORMObject<Test> {
   @Column({ type: "text" })
   public description?: string;
 
+  @Field()
+  @Column({ type: "text" })
+  public explaination?: string;
+
   @Field(_type => SkillsType)
   @Column()
   public skillType!: SkillsType;
@@ -77,7 +81,7 @@ export class Test extends ORMObject<Test> {
 
   @Field(_type => Number)
   @Column({ default: 0 })
-  public order!: number;
+  public displayOrder!: number;
 
   @Field()
   @CreateDateColumn()
@@ -106,6 +110,9 @@ export class NewTestInput {
 
   @Field({ nullable: true })
   public description?: string;
+
+  @Field({ nullable: true })
+  public explaination?: string;
 
   @Field(_type => EnglishCertificateType, { nullable: true })
   public certificateType?: EnglishCertificateType;

@@ -4,7 +4,6 @@ import {
   Repository,
   SelectQueryBuilder,
 } from "typeorm";
-import { s3 } from "../../utils/s3Promises";
 import { Asset, AssetInput } from "./entities/Asset";
 // import { config } from '../../config';
 // tslint:disable
@@ -24,10 +23,10 @@ export class AssetRepository extends Repository<Asset> {
   }
 
   public async createUploadUrl(assetInput: AssetInput): Promise<Asset> {
+
     const time = new Date().getTime();
     const filepath = `${assetInput.typeFolder}/${assetInput.name}-${time}`;
-    const url = await s3.uploadDraftFile(filepath, assetInput.type);
-    const draftAsset = this.create({url, path: filepath, ...assetInput});
+    const draftAsset = this.create({url: filepath, path: filepath, ...assetInput});
     await this.save(draftAsset);
    
     return draftAsset;

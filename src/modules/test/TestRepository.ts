@@ -1,9 +1,8 @@
-import { EntityRepository, QueryRunner, Repository, SelectQueryBuilder, getCustomRepository } from 'typeorm';
+import { EntityRepository, QueryRunner, Repository, SelectQueryBuilder } from 'typeorm';
 
 // import { ApolloError } from 'apollo-server-express';
 import { Test, NewTestInput } from './entities/Test';
 import { ApolloError } from 'apollo-server-errors';
-import { TestQuestionRepository } from '../testQuestion/TestQuestionRepository';
 
 
 type T = Test;
@@ -18,29 +17,17 @@ export class TestRepository extends Repository<T> {
   }
 
   public async createTest(data: NewTestInput): Promise<Test | undefined> {
-    const {testQuestionInputIds, ...dataTest} = data;
     // for Test
-    const test = new Test(dataTest);
-    await test.save();
-    const testId = test.id;
-    // for TestQuestion
-    if(testQuestionInputIds){
-      if(!testQuestionInputIds.testId){
-        testQuestionInputIds.testId = testId;
-      }
-      const testQuestions = getCustomRepository(TestQuestionRepository).createListTestQuestions(testQuestionInputIds);
-      if(!testQuestions){
-        return undefined;
-      }
-    }
-    return test;
+    const test = new Test(data);
+    return await test.save();
   }
-  public async updatePart(id: string, data: NewTestInput): Promise<Test>{
+  public async updateTest(data: NewTestInput): Promise<Test>{
+    const {id, ...dataTestd} = data;
     const test = await this.findOne(id);
     if(!test){
         throw new ApolloError(`No Test found`, 'NOT_FOUND');
     }
-    test.updateWith({...data});
+    test.updateWith({...dataTestd});
     return test;
   }
 }

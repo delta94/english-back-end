@@ -23,7 +23,7 @@ export class TestResolver {
 
   @Authorized()
   @Mutation(_returns => Test)
-  public async updateTest(@Arg('id') id: string, @Arg('data') data: NewTestInput): Promise<Test> {
-    return await this.testRepository.updatePart(id, data);
+  public async updateTest(@Arg('data') data: NewTestInput): Promise<Test> {
+    return await this.testRepository.updateTest(data);
   }
 }

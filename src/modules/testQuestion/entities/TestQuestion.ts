@@ -48,7 +48,7 @@ export class TestQuestion extends ORMObject<TestQuestion> {
     
     @Field(_type => Number)
     @Column({default: 0})
-    public order!: number;
+    public displayOrder!: number;
 
     @Field()
     @CreateDateColumn()
@@ -68,6 +68,9 @@ export class TestQuestion extends ORMObject<TestQuestion> {
 @InputType()
 export class TestQuestionInputId {
   @Field(_type => String, {nullable: true})
+  public id?: string;
+
+  @Field(_type => String, {nullable: true})
   public testId?: string;
 
   @Field(_type => String, {nullable: true})
@@ -75,6 +78,9 @@ export class TestQuestionInputId {
 
   @Field(_type => String, {nullable: true})
   public questionId?: string;
+
+  @Field(_type => Number, {nullable: true})
+  public displayOrder?: number;
 }
 
 @InputType()

@@ -32,4 +32,10 @@ export class TestQuestionResolver {
     return id;
   }
 
+  @Authorized()
+  @Mutation(_type => TestQuestion)
+  public async updateTestQuestion(@Arg('data') data: TestQuestionInputId): Promise<TestQuestion | undefined> {
+    return await this.testQuestionRepository.updateTestQuestion(data);
+  }
+
 }

@@ -20,7 +20,7 @@ export class PartResolver {
     return await this.partRepository.find({
       where : {certificateType},
       order: {
-        order: 'ASC',
+        displayOrder: 'ASC',
         createdAt: 'DESC',
       },
     });

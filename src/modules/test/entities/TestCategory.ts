@@ -24,7 +24,7 @@ export class TestCategory extends ORMObject<TestCategory> {
 
     @Field(_type => Number)
     @Column({default: 0})
-    public order!: number;
+    public displayOrder!: number;
 
     @Field()
     @CreateDateColumn()
