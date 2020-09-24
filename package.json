@@ -11,7 +11,7 @@
     "clean": "rimraf dist/*",
     "lint": "tslint -c tslint.json -p tsconfig.json --fix",
     "tsc": "tsc",
-    "build": "npm-run-all clean lint tsc install-youtubedl",
+    "build": "clean lint tsc install-youtubedl",
     "watch": "tsc-watch --onSuccess \"npm run migandstart\" --compiler typescript/bin/tsc",
     "migandstart": "typeorm migration:run && node dist/index",
     "install-youtubedl": "ts-node scripts/install-youtubedl.ts",
