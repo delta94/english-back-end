@@ -33,7 +33,8 @@ export const config = {
       'http://localhost:3000',
       'https://tingadev.github.io/english-front-end/',
       'http://tingadev.xyz',
-      'http://powper.vn'
+      'http://powper.vn',
+      'http://103.153.73.228'
     ],
   },
 
