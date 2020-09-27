@@ -19,6 +19,13 @@ export enum QuestionType {
   FillBlank = "FillBlank",
 }
 
+export enum QuestionLabel {
+  Grammar = "Grammar",
+}
+registerEnumType(QuestionLabel, {
+  name: "QuestionLabel",
+});
+
 registerEnumType(QuestionType, {
   name: "QuestionType",
 });

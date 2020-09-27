@@ -10,6 +10,7 @@ export class AssetResolver {
   @Authorized()
   @Mutation(_returns => Asset)
   public async uploadMedia(@Arg('data') data: AssetInput): Promise<Asset> {
-    return this.assetRepository.createUploadUrl(data);
+    const time = new Date().getTime();
+    return this.assetRepository.createUploadUrl(data, time, undefined);
   }
 }

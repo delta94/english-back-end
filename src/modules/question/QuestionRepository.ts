@@ -5,6 +5,7 @@ import {
   SelectQueryBuilder,
   getCustomRepository,
   getManager,
+  DeleteResult
 } from "typeorm";
 
 // import { ApolloError } from 'apollo-server-express';
@@ -89,6 +90,14 @@ export class QuestionRepository extends Repository<T> {
       );
     }
     return question;
+  }
+
+  public async removeQuestion(id: string): Promise<DeleteResult>{
+    const res = await this.createQueryBuilder()
+      .where("id = :id", { id })
+      .delete()
+      .execute();
+    return res;
   }
 
   public async getQuestions(data: QuestionFilterType): Promise<Questions> {

@@ -1,8 +1,9 @@
 import { ObjectType, Field, registerEnumType, InputType } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, OneToMany, DeleteDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, OneToMany, DeleteDateColumn, UpdateDateColumn, ManyToOne } from "typeorm";
 import { ORMObject } from "../../../types/ORMObject";
 import { TestQuestion, TestQuestionInputIds } from "../../testQuestion/entities/TestQuestion";
 import { Part, EnglishCertificateType } from "../../part/entities/Part";
+import { TestCategory } from "./TestCategory";
 
 export enum SkillsType {
   Reading = 'Reading',
@@ -22,6 +23,8 @@ export class PartAndAudioSeconds {
   @Field({ nullable: true })
   public autdioSecs?: number;
 
+  @Field({ nullable: true })
+  public displayOrder?: number;
 }
 
 
@@ -39,6 +42,10 @@ export class Test extends ORMObject<Test> {
   @Field()
   @Column({ type: "text" })
   public description?: string;
+
+  @Field(_type => String)
+  @Column()
+  public audioUrl?: string;
 
   @Field()
   @Column({ type: "text" })
@@ -74,6 +81,13 @@ export class Test extends ORMObject<Test> {
   )
   public part?: Promise<Part>;
 
+  @Field(_type => TestCategory, { nullable: true })
+  @ManyToOne(
+    _type => TestCategory,
+    testCategory => testCategory.tests,
+    { nullable: true }
+  )
+  public testCategory?: Promise<TestCategory>;
 
   @Field(_type => Boolean)
   @Column({ default: false })
@@ -102,8 +116,8 @@ export class NewTestInput {
   @Field({ nullable: true })
   public id?: string;
 
-  @Field()
-  public testName!: string;
+  @Field({ nullable: true})
+  public testName?: string;
 
   @Field(_type => SkillsType, { nullable: true })
   public skillType?: SkillsType;
@@ -126,4 +140,6 @@ export class NewTestInput {
   @Field(_type => TestQuestionInputIds, { nullable: true })
   public testQuestionInputIds?: TestQuestionInputIds;
 
+  @Field({ nullable: true })
+  public audioUrl?: string;
 }

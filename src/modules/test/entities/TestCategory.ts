@@ -1,7 +1,8 @@
-import { ObjectType, Field } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, DeleteDateColumn, UpdateDateColumn } from "typeorm";
+import { ObjectType, Field, InputType } from "type-graphql";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, DeleteDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import { ORMObject } from "../../../types/ORMObject";
 import { EnglishCertificateType } from "../../part/entities/Part";
+import { Test } from "./Test";
 
 @ObjectType()
 @Entity()
@@ -17,6 +18,14 @@ export class TestCategory extends ORMObject<TestCategory> {
     @Field(_type => EnglishCertificateType)
     @Column()
     public certificateType!: EnglishCertificateType;
+
+    @Field(_type => Test, { nullable: true })
+    @OneToMany(
+      _type => Test,
+      test => test.testCategory,
+      { nullable: true }
+    )
+    public tests?: Promise<Test[]>;
 
     @Field(_type => Boolean)
     @Column({ default: false })
@@ -39,4 +48,19 @@ export class TestCategory extends ORMObject<TestCategory> {
     @DeleteDateColumn()
     public deleteAt?: Date;
 
+}
+
+@InputType()
+export class NewTestCategoryInput {
+  @Field({ nullable: true })
+  public id?: string;
+
+  @Field()
+  public testCategoryName!: string;
+ 
+  @Field(_type => EnglishCertificateType, { nullable: true })
+  public certificateType?: EnglishCertificateType;
+
+  @Field(_type => Boolean, { nullable: true })
+  public isPublished?: boolean;
 }

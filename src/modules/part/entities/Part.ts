@@ -12,10 +12,12 @@ import {
 import { ORMObject } from "../../../types/ORMObject";
 import { TestQuestion } from "../../testQuestion/entities/TestQuestion";
 import { Test, SkillsType } from "../../test/entities/Test";
+import { OrderDirection } from "../../user/entities/UserFilter";
 
 export enum EnglishCertificateType {
   Toiec = "Toiec",
   IELTS = "IELTS",
+  Custom ="Custom",
 }
 
 registerEnumType(EnglishCertificateType, {
@@ -88,4 +90,46 @@ export class NewPartInput implements Partial<Part> {
 
   @Field(_type => EnglishCertificateType)
   public certificateType!: EnglishCertificateType;
+  
+  @Field({ nullable: true })
+  public displayOrder?: number;
+
 }
+
+@InputType()
+export class PartIdsInput{
+  @Field(_type => [String])
+  public ids!: string[];
+}
+
+
+@InputType()
+export class PartFilterInput{
+  @Field(_type => SkillsType, {nullable: true })
+  public skillType?: SkillsType;
+
+  @Field(_type => EnglishCertificateType, {nullable: true })
+  public certificateType?: EnglishCertificateType;
+
+  @Field(_type => OrderDirection, { nullable: true })
+  public orderDirection?: OrderDirection;
+
+  @Field({ nullable: true })
+  public cursor?: string;
+
+  @Field(_type => PartIdsInput, {nullable: true})
+  public partIds?: PartIdsInput;
+}
+
+@ObjectType()
+export class Parts {
+  @Field(_type => [Part])
+  public parts!: Part[];
+
+  @Field()
+  public total!: number;
+
+  @Field({ defaultValue: false })
+  public nextCursor?: string;
+}
+

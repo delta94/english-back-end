@@ -31,4 +31,11 @@ export class QuestionResolver {
   public async updateQuestion(@Arg('data') data: NewQuestionInput): Promise<Question | undefined> {
     return this.questionRepository.updateQuestion(data);
   }
+
+  @Authorized()
+  @Mutation(_returns => String)
+  public async removeQuestion(@Arg('id') id: string): Promise<string> {
+    await this.questionRepository.removeQuestion(id);
+    return id;
+  }
 }

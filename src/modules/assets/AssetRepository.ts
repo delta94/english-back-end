@@ -22,10 +22,10 @@ export class AssetRepository extends Repository<Asset> {
     );
   }
 
-  public async createUploadUrl(assetInput: AssetInput): Promise<Asset> {
+  public async createUploadUrl(assetInput: AssetInput, time: number, extension?: string): Promise<Asset> {
 
-    const time = new Date().getTime();
-    const filepath = `${assetInput.typeFolder}/${assetInput.name}-${time}`;
+    
+    const filepath = `${assetInput.typeFolder}/${assetInput.name}-${time}` + extension;
     const draftAsset = this.create({url: filepath, path: filepath, ...assetInput});
     await this.save(draftAsset);
    

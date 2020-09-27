@@ -19,7 +19,6 @@ import _ from "lodash";
 import { MiddlewareFn } from "type-graphql";
 import ImgRouter from "./uploadMulter";
 
-// import cors from 'cors';
 // import shortid from 'shortid';
 
 // initialize configuration
@@ -150,11 +149,11 @@ const bootstrap = async () => {
     app.use(bodyParser.urlencoded({ limit: "60mb", extended: true }));
     app.use(bodyParser.json({ limit: "60mb" }));
     // app.use(authorizeToken);
-    server.applyMiddleware({ app, cors: config.cors });
+    
     app.use('/public',express.static("public"));
     app.use("/healthcheck", require("express-healthcheck")());
     app.use('/uploads', ImgRouter);
-  
+    server.applyMiddleware({ app, cors: config.cors });
     const port = config.port;
     app.listen({ port }, () =>
       // tslint:disable-next-line: no-console

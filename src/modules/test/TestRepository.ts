@@ -22,12 +22,12 @@ export class TestRepository extends Repository<T> {
     return await test.save();
   }
   public async updateTest(data: NewTestInput): Promise<Test>{
-    const {id, ...dataTestd} = data;
-    const test = await this.findOne(id);
+    const {id, ...dataTest} = data;
+    const test = await this.createQueryBuilder().where('id = :id',{id}).getOne();
     if(!test){
         throw new ApolloError(`No Test found`, 'NOT_FOUND');
     }
-    test.updateWith({...dataTestd});
+    test.updateWith({...dataTest});
     return test;
   }
 }
