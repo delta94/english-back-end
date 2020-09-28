@@ -75,6 +75,10 @@ export class Question extends ORMObject<Question> {
   @Column()
   public audioSec?: number;
 
+  @Field(_type => Number)
+  @Column()
+  public audioSecVN?: number;
+
   @Field(_type => QuestionType)
   @Column()
   public questionType!: QuestionType;
@@ -142,6 +146,9 @@ export class NewQuestionInput {
 
   @Field()
   public audioSec?: number;
+
+  @Field()
+  public audioSecVN?: number;
 
   @Field(_type => QuestionType)
   public questionType!: QuestionType;

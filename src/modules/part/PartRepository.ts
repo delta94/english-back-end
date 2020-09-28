@@ -1,4 +1,5 @@
 import {
+  DeleteResult,
   EntityRepository,
   QueryRunner,
   Repository,
@@ -81,5 +82,13 @@ export class PartRepository extends Repository<T> {
     }
     part.updateWith({ ...data });
     return part;
+  }
+
+  public async removePart(id: string): Promise<DeleteResult>{
+    const res = await this.createQueryBuilder()
+      .where("id = :id", { id })
+      .delete()
+      .execute();
+    return res;
   }
 }

@@ -1,8 +1,7 @@
 import { Resolver, Authorized, Mutation, Arg, Query } from "type-graphql";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { TestRepository } from "../TestRepository";
-import { Test, NewTestInput } from "../entities/Test";
-import { EnglishCertificateType } from "../../part/entities/Part";
+import { Test, NewTestInput, TestFilterInput, Tests, TestsUpdateInput } from "../entities/Test";
 // import { AuthedContext } from "../../../auth/AuthedContext";
 
 @Resolver(_of => Test)
@@ -16,15 +15,9 @@ export class TestResolver {
   }
 
   @Authorized()
-  @Query(_type => [Test])
-  public async getTests(@Arg('certificateType') certificateType: EnglishCertificateType): Promise<Test[] | undefined> {
-    return await this.testRepository.find({
-      where : {certificateType},
-      order: {
-        displayOrder: 'ASC',
-        createdAt: 'DESC',
-      },
-    });
+  @Query(_type => Tests)
+  public async getTests(@Arg('data') data: TestFilterInput): Promise<Tests | undefined> {
+    return await this.testRepository.getTests(data);
   }
   
   @Authorized()
@@ -37,5 +30,25 @@ export class TestResolver {
   @Mutation(_returns => Test)
   public async updateTest(@Arg('data') data: NewTestInput): Promise<Test> {
     return await this.testRepository.updateTest(data);
+  }
+
+  @Authorized()
+  @Mutation(_returns => [Test])
+  public async updateTests(@Arg('data') data: TestsUpdateInput): Promise<Test[]> {
+    return await this.testRepository.updateTests(data);
+  }
+
+  @Authorized()
+  @Mutation(_returns => Test)
+  public async removeFromCat(@Arg('id') id: string): Promise<Test> {
+    return await this.testRepository.removeFromCat(id);
+  }
+
+
+  @Authorized()
+  @Mutation(_returns => String)
+  public async removeTest(@Arg('id') id: string): Promise<string> {
+    await this.testRepository.removeTest(id);
+    return id;
   }
 }

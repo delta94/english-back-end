@@ -54,16 +54,23 @@ type Mutation {
   createQuestion(data: NewQuestionInput!): Question!
   createTest(data: NewTestInput!): Test!
   createTestCategory(data: NewTestCategoryInput!): TestCategory!
+  createTestGroup(data: NewTestGroupInput!): TestGroup!
   createTestQuestion(data: TestQuestionInputId!): TestQuestion!
   createUser(data: UserInput!): User!
+  removeFromCat(id: String!): Test!
+  removePart(id: String!): String!
   removeQuestion(id: String!): String!
+  removeTest(id: String!): String!
   removeTestCategory(id: String!): String!
+  removeTestGroup(id: String!): String!
   removeTestQuestion(id: String!): String!
   updatePart(data: NewPartInput!): Part!
   updateQuestion(data: NewQuestionInput!): Question!
   updateTest(data: NewTestInput!): Test!
   updateTestCategory(data: NewTestCategoryInput!): TestCategory!
+  updateTestGroup(data: NewTestGroupInput!): TestGroup!
   updateTestQuestion(data: TestQuestionInputId!): TestQuestion!
+  updateTests(data: TestsUpdateInput!): [Test!]!
   uploadMedia(data: AssetInput!): Asset!
 }
 
@@ -79,6 +86,7 @@ input NewPartInput {
 input NewQuestionInput {
   answers: [AnswersInput!]!
   audioSec: Float!
+  audioSecVN: Float!
   certificateType: EnglishCertificateType!
   content: String
   description: String
@@ -95,20 +103,33 @@ input NewQuestionInput {
 
 input NewTestCategoryInput {
   certificateType: EnglishCertificateType
+  displayOrder: Float
+  displayOrderGroup: Float
   id: String
   isPublished: Boolean
   testCategoryName: String!
+  testGroupId: String
+}
+
+input NewTestGroupInput {
+  certificateType: EnglishCertificateType
+  id: String
+  isPublished: Boolean
+  testGroupName: String!
 }
 
 input NewTestInput {
   audioUrl: String
   certificateType: EnglishCertificateType
   description: String
+  displayOrder: Float
+  displayOrderCategory: Float
   explaination: String
   id: String
   isPublished: Boolean
   partAndAudioSecs: [AudioSecondsInput!]
   skillType: SkillsType
+  testCategoryId: String
   testName: String
   testQuestionInputIds: TestQuestionInputIds
 }
@@ -165,10 +186,12 @@ type Parts {
 type Query {
   getParts(data: PartFilterInput!): Parts!
   getPartsFromIds(data: PartIdsInput!): [Part!]!
-  getTestCategories(certificateType: String!): [TestCategory!]!
+  getTestCategories(data: TestCategoryFilterInput!): TestCategories!
   getTestCategory(id: String!): TestCategory!
+  getTestGroup(id: String!): TestGroup!
+  getTestGroups(data: TestGroupFilterInput!): TestGroups!
   getTestQuestions(testId: String!): [TestQuestion!]!
-  getTests(certificateType: String!): [Test!]!
+  getTests(data: TestFilterInput!): Tests!
   part(id: String!): Part!
   question(id: String!): Question!
   questions(questionFilterType: QuestionFilterTypeInput!): Questions!
@@ -180,6 +203,7 @@ type Query {
 type Question {
   answers: [Answers!]!
   audioSec: Float!
+  audioSecVN: Float!
   certificateType: EnglishCertificateType!
   content: String
   createdAt: DateTime!
@@ -234,6 +258,7 @@ type Test {
   deleteAt: DateTime
   description: String!
   displayOrder: Float!
+  displayOrderCategory: Float!
   explaination: String!
   id: String!
   isPublished: Boolean!
@@ -246,16 +271,76 @@ type Test {
   updatedAt: DateTime!
 }
 
+type TestCategories {
+  nextCursor: String
+  testCategories: [TestCategory!]!
+  total: Float!
+}
+
 type TestCategory {
+  certificateType: EnglishCertificateType!
+  createdAt: DateTime!
+  deleteAt: DateTime
+  displayOrder: Float!
+  displayOrderGroup: Float!
+  id: String!
+  isPublished: Boolean!
+  testCategoryName: String!
+  testGroup: TestGroup
+  tests: [Test!]
+  updatedAt: DateTime!
+}
+
+input TestCategoryFilterInput {
+  certificateType: EnglishCertificateType
+  cursor: String
+  orderDirection: OrderDirection
+  testCategoryIds: TestCategoryIdsInput
+}
+
+input TestCategoryIdsInput {
+  ids: [String!]!
+}
+
+input TestFilterInput {
+  certificateType: EnglishCertificateType
+  cursor: String
+  orderDirection: OrderDirection
+  skillType: SkillsType
+  testIds: TestIdsInput
+}
+
+type TestGroup {
   certificateType: EnglishCertificateType!
   createdAt: DateTime!
   deleteAt: DateTime
   displayOrder: Float!
   id: String!
   isPublished: Boolean!
-  testCategoryName: String!
-  tests: Test
+  testCategories: [TestCategory!]
+  testGroupName: String!
   updatedAt: DateTime!
+}
+
+input TestGroupFilterInput {
+  certificateType: EnglishCertificateType
+  cursor: String
+  orderDirection: OrderDirection
+  testGroupIds: TestGroupIdsInput
+}
+
+input TestGroupIdsInput {
+  ids: [String!]!
+}
+
+type TestGroups {
+  nextCursor: String
+  testGroups: [TestGroup!]!
+  total: Float!
+}
+
+input TestIdsInput {
+  ids: [String!]!
 }
 
 type TestQuestion {
@@ -280,6 +365,17 @@ input TestQuestionInputId {
 input TestQuestionInputIds {
   partIdAndQuestionIdsInput: [PartIdAndQuestionIdsInput!]!
   testId: String
+}
+
+type Tests {
+  nextCursor: String
+  tests: [Test!]!
+  total: Float!
+}
+
+input TestsUpdateInput {
+  testCategoryId: String!
+  testIds: TestIdsInput!
 }
 
 type User {

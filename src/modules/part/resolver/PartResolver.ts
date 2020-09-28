@@ -37,4 +37,11 @@ export class PartResolver {
   public async updatePart(@Arg('data') data: NewPartInput): Promise<Part> {
     return await this.partRepository.updatePart(data);
   }
+
+  @Authorized()
+  @Mutation(_returns => String)
+  public async removePart(@Arg('id') id: string): Promise<string> {
+    await this.partRepository.removePart(id);
+    return id;
+  }
 }

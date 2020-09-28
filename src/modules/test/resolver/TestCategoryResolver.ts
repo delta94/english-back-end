@@ -1,7 +1,6 @@
 import { Arg, Authorized, Mutation, Query, Resolver } from "type-graphql";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { EnglishCertificateType } from "../../part/entities/Part";
-import { NewTestCategoryInput, TestCategory } from "../entities/TestCategory";
+import { NewTestCategoryInput, TestCategories, TestCategory, TestCategoryFilterInput } from "../entities/TestCategory";
 import { TestCategoryRepository } from "../TestCategoryRepository";
 // import { AuthedContext } from "../../../auth/AuthedContext";
 
@@ -13,19 +12,13 @@ constructor(@InjectRepository(TestCategory) private readonly testCategoryReposit
   @Authorized()
   @Query(_type => TestCategory)
   public async getTestCategory(@Arg('id') id: string): Promise<TestCategory | undefined> {
-    return await this.testCategoryRepository.findOne(id);
+    return await this.testCategoryRepository.findOne({id});
   }
 
   @Authorized()
-  @Query(_type => [TestCategory])
-  public async getTestCategories(@Arg('certificateType') certificateType: EnglishCertificateType): Promise<TestCategory[] | undefined> {
-    return await this.testCategoryRepository.find({
-      where : {certificateType},
-      order: {
-        displayOrder: 'ASC',
-        createdAt: 'DESC',
-      },
-    });
+  @Query(_type => TestCategories)
+  public async getTestCategories(@Arg('data') data: TestCategoryFilterInput): Promise<TestCategories | undefined> {
+    return await this.testCategoryRepository.getTestCategories(data);
   }
 
   @Authorized()

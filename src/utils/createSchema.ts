@@ -8,6 +8,7 @@ import { TestResolver } from '../modules/test/resolver/TestResolver';
 import { TestCategoryResolver } from '../modules/test/resolver/TestCategoryResolver';
 import { AssetResolver } from '../modules/assets/resolvers/AssetResolver';
 import { TestQuestionResolver } from '../modules/testQuestion/resolver/TestQuestionResolver';
+import { TestGroupResolver } from '../modules/test/resolver/TestGroupResolver';
 
 export const createSchema = (container: any): Promise<GraphQLSchema> => {
   return buildSchema({
@@ -20,6 +21,7 @@ export const createSchema = (container: any): Promise<GraphQLSchema> => {
       TestResolver,
       TestCategoryResolver,
       TestQuestionResolver,
+      TestGroupResolver,
     ],
     authChecker: myAuthChecker,
     emitSchemaFile: {

@@ -43,6 +43,7 @@ export class QuestionRepository extends Repository<T> {
     const question = new Question({
       questionName: data.questionName,
       audioSec: data.audioSec,
+      audioSecVN: data.audioSecVN,
       questionType: data.questionType
         ? data.questionType
         : QuestionType.SingleChoice,
