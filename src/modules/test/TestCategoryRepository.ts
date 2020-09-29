@@ -62,6 +62,7 @@ export class TestCategoryRepository extends Repository<T> {
     if(testGroupId){
       const testGroup = await getCustomRepository(TestGroupRepository).findOneOrFail({id: testGroupId});
       testCategory.testGroup = Promise.resolve(testGroup);
+      testCategory.save();
     }
     testCategory.updateWith({...dataTestCategory});
     return testCategory;

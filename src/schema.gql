@@ -37,6 +37,7 @@ input AudioSecondsInput {
 scalar DateTime
 
 enum EnglishCertificateType {
+  Blog
   Custom
   IELTS
   Toiec
@@ -113,9 +114,12 @@ input NewTestCategoryInput {
 
 input NewTestGroupInput {
   certificateType: EnglishCertificateType
+  displayOrder: Float
   id: String
   isPublished: Boolean
-  testGroupName: String!
+  link: String
+  parentId: String
+  testGroupName: String
 }
 
 input NewTestInput {
@@ -317,6 +321,8 @@ type TestGroup {
   displayOrder: Float!
   id: String!
   isPublished: Boolean!
+  link: String!
+  parentId: String
   testCategories: [TestCategory!]
   testGroupName: String!
   updatedAt: DateTime!

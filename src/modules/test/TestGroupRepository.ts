@@ -18,15 +18,13 @@ export class TestGroupRepository extends Repository<T> {
     return new MySelectQueryBuilder(super.createQueryBuilder('test_group', queryRunner));
   }
   public async getTestGroups(data: TestGroupFilterInput): Promise<TestGroups> {
-    let query = this.createQueryBuilder().where(
-      "test_group.certificateType = :certificateType",
-      { certificateType: data.certificateType }
-    );
+    let query = this.createQueryBuilder();
 
-
-    if (data.testGroupIds?.ids && data.testGroupIds?.ids.length > 0) {
-      const ids = data.testGroupIds.ids;
-      query = query.andWhere(`test_group.id NOT IN (:ids)`, { ids : ids.map(id => id) });
+    if(data.certificateType){
+      query = query.where(
+        "test_group.certificateType = :certificateType",
+        { certificateType: data.certificateType }
+      );
     }
     // response ordering rules
     const orderDirection = data.orderDirection || OrderDirection.Desc;
@@ -53,11 +51,16 @@ export class TestGroupRepository extends Repository<T> {
     return await testGroup.save();
   }
   public async updateTestGroup(data: NewTestGroupInput): Promise<TestGroup>{
-    const {id, ...dataTestGroup} = data;
+    const {id, parentId, ...dataTestGroup} = data;
     const testGroup = await this.findOne({id});
     if(!testGroup){
         throw new ApolloError(`No Test Group found`, 'NOT_FOUND');
     }
+    if(parentId){
+      testGroup.parentId = parentId;
+      testGroup.save();
+    }
+    
     testGroup.updateWith({...dataTestGroup});
     return testGroup;
   }

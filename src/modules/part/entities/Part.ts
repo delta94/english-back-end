@@ -17,7 +17,8 @@ import { OrderDirection } from "../../user/entities/UserFilter";
 export enum EnglishCertificateType {
   Toiec = "Toiec",
   IELTS = "IELTS",
-  Custom ="Custom",
+  Custom = "Custom",
+  Blog = "Blog"
 }
 
 registerEnumType(EnglishCertificateType, {
