@@ -8,6 +8,9 @@ import { AssetInput } from '../modules/assets/entities/Asset';
 const fileTypes = ['image/jpeg', 'image/png', 'image/svg+xml', 'video/mp4', 'audio/mpeg'];
 const ImgRouter = express.Router();
 const time = new Date().getTime();
+const corsOptions = {
+    origin: ['http://powper.vn', 'http://localhost:3000'],
+  };
 const storage = multer.diskStorage({
     destination: (_req, file, cb) => {
         const pathUpload = './public/uploads/' + file.mimetype.split('/')[0];
@@ -33,7 +36,7 @@ const upload = multer({
     fileFilter,
 });
 
-ImgRouter.route("/media").post(upload.single('file'), cors(), async (req, res, next) => {
+ImgRouter.route("/media").post(upload.single('file'), cors(corsOptions), async (req, res, next) => {
     const assetRepository = getCustomRepository(AssetRepository);
     const assetInput: AssetInput = {
         name: req.body.name,
