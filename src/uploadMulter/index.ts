@@ -9,7 +9,7 @@ const fileTypes = ['image/jpeg', 'image/png', 'image/svg+xml', 'video/mp4', 'aud
 const ImgRouter = express.Router();
 const time = new Date().getTime();
 const corsOptions = {
-    origin: "*",
+    origin: ['http://localhost:3000', 'http://powper.vn'],
     credentials: true,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: false,
