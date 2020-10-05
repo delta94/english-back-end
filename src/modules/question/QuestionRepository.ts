@@ -54,7 +54,7 @@ export class QuestionRepository extends Repository<T> {
       answers: data.answers,
       result: data.result,
       description: data.description,
-      image: data.image,
+      image: data.image || '',
     });
     await question.save();
     // create test question part
