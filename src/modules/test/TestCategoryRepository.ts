@@ -36,7 +36,7 @@ export class TestCategoryRepository extends Repository<T> {
       {
         orderBy: "displayOrder",
         orderDir: orderDirection,
-        limit: 10,
+        limit: 100,
       },
       data.cursor
     );
