@@ -17,7 +17,7 @@ export class TestQuestion extends ORMObject<TestQuestion> {
     @ManyToOne(
       _type => Test,
       test => test.testQuestions,
-      {cascade: true}
+      { onDelete: "CASCADE" }
     )
     public test!:  Promise<Test>;
     @RelationId((testQuestion: TestQuestion) => testQuestion.test)

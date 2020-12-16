@@ -1,33 +1,52 @@
-import { DeleteResult, EntityRepository, getCustomRepository, QueryRunner, Repository, SelectQueryBuilder } from 'typeorm';
+import {
+  DeleteResult,
+  EntityRepository,
+  getCustomRepository,
+  QueryRunner,
+  Repository,
+  SelectQueryBuilder,
+} from "typeorm";
 
 // import { ApolloError } from 'apollo-server-express';
-import { ApolloError } from 'apollo-server-errors';
-import { NewTestCategoryInput, TestCategories, TestCategory, TestCategoryFilterInput } from './entities/TestCategory';
-import { OrderDirection } from '../user/entities/UserFilter';
-import { queryWithPagination } from '../../utils/pagination';
-import { TestGroupRepository } from './TestGroupRepository';
-
+import { ApolloError } from "apollo-server-errors";
+import {
+  NewTestCategoryInput,
+  TestCategories,
+  TestCategory,
+  TestCategoryFilterInput,
+} from "./entities/TestCategory";
+import { OrderDirection } from "../user/entities/UserFilter";
+import { queryWithPagination } from "../../utils/pagination";
+import { TestGroupRepository } from "./TestGroupRepository";
+import { Test } from "./entities/Test";
 
 type T = TestCategory;
 
-class MySelectQueryBuilder extends SelectQueryBuilder<T> {
-}
+class MySelectQueryBuilder extends SelectQueryBuilder<T> {}
 
 @EntityRepository(TestCategory)
 export class TestCategoryRepository extends Repository<T> {
-  public createQueryBuilder(_alias?: string, queryRunner?: QueryRunner): MySelectQueryBuilder {
-    return new MySelectQueryBuilder(super.createQueryBuilder('test_category', queryRunner));
+  public createQueryBuilder(
+    _alias?: string,
+    queryRunner?: QueryRunner
+  ): MySelectQueryBuilder {
+    return new MySelectQueryBuilder(
+      super.createQueryBuilder("test_category", queryRunner)
+    );
   }
-  public async getTestCategories(data: TestCategoryFilterInput): Promise<TestCategories> {
+  public async getTestCategories(
+    data: TestCategoryFilterInput
+  ): Promise<TestCategories> {
     let query = this.createQueryBuilder().where(
       "test_category.certificateType = :certificateType",
       { certificateType: data.certificateType }
     );
 
-
     if (data.testCategoryIds?.ids && data.testCategoryIds?.ids.length > 0) {
       const ids = data.testCategoryIds.ids;
-      query = query.andWhere(`test_category.id NOT IN (:ids)`, { ids : ids.map(id => id) });
+      query = query.andWhere(`test_category.id NOT IN (:ids)`, {
+        ids: ids.map((id) => id),
+      });
     }
     // response ordering rules
     const orderDirection = data.orderDirection || OrderDirection.Desc;
@@ -48,33 +67,48 @@ export class TestCategoryRepository extends Repository<T> {
       nextCursor,
     };
   }
-  
-  public async createTestCategory(data: NewTestCategoryInput): Promise<TestCategory | undefined> {
+
+  public async createTestCategory(
+    data: NewTestCategoryInput
+  ): Promise<TestCategory | undefined> {
     // for Test Category
     const testCategory = new TestCategory(data);
     return await testCategory.save();
   }
-  public async updateTestCategory(data: NewTestCategoryInput): Promise<TestCategory>{
-    const {id, testGroupId, ...dataTestCategory} = data;
-    const testCategory = await this.findOne({id});
-    if(!testCategory){
-        throw new ApolloError(`No Test Category found`, 'NOT_FOUND');
+  public async updateTestCategory(
+    data: NewTestCategoryInput
+  ): Promise<TestCategory> {
+    const { id, testGroupId, ...dataTestCategory } = data;
+    const testCategory = await this.findOne({ id });
+    if (!testCategory) {
+      throw new ApolloError(`No Test Category found`, "NOT_FOUND");
     }
-    if(testGroupId){
-      const testGroup = await getCustomRepository(TestGroupRepository).findOneOrFail({id: testGroupId});
+    if (testGroupId) {
+      const testGroup = await getCustomRepository(
+        TestGroupRepository
+      ).findOneOrFail({ id: testGroupId });
       testCategory.testGroup = Promise.resolve(testGroup);
       testCategory.save();
     }
-    testCategory.updateWith({...dataTestCategory});
+    testCategory.updateWith({ ...dataTestCategory });
     return testCategory;
   }
 
-  public async removeTestCategory(id: string): Promise<DeleteResult>{
+  public async removeTestCategory(id: string): Promise<DeleteResult> {
+    const testCategory = await this.findOne({id})
+    const tests = await testCategory?.tests;
+    if (tests && tests.length > 0) {
+      const promises: Promise<Test>[] = tests.map(async (test) => {
+        test.testCategory = Promise.resolve(null);
+        await test.save();
+        return test;
+      });
+      await Promise.all(promises);
+    }
     const res = await this.createQueryBuilder()
       .where("id = :id", { id })
       .delete()
       .execute();
     return res;
   }
-  
 }
