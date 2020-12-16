@@ -95,6 +95,10 @@ export class Question extends ORMObject<Question> {
   @Column({ type: "text" , nullable: true})
   public explaination?: string;
 
+  @Field({nullable: true})
+  @Column({ type: "text" , nullable: true})
+  public quickExplaination?: string;
+
   @Field(_type => String)
   @Column()
   public image?: string;
@@ -158,6 +162,9 @@ export class NewQuestionInput {
 
   @Field({ nullable: true })
   public description?: string;
+
+  @Field({ nullable: true })
+  public quickExplaination?: string;
 
   @Field({ nullable: true })
   public explaination?: string;

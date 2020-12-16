@@ -49,6 +49,7 @@ export class QuestionRepository extends Repository<T> {
         : QuestionType.SingleChoice,
       content: data.content,
       explaination: data.explaination,
+      quickExplaination: data.quickExplaination,
       skillType: data.skillType,
       certificateType: data.certificateType,
       answers: data.answers,
@@ -129,6 +130,7 @@ export class QuestionRepository extends Repository<T> {
       {
         orderBy: "question.updatedAt",
         orderDir: orderDirection,
+        limit: 10,
       },
       data.cursor
     );
