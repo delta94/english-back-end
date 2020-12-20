@@ -81,7 +81,7 @@ export class TestRepository extends Repository<T> {
       {
         orderBy: "displayOrder",
         orderDir: orderDirection,
-        limit: 100,
+        limit: 10,
       },
       data.cursor
     );
