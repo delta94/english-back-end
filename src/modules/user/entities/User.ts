@@ -1,18 +1,26 @@
 import { ObjectType, Field, registerEnumType, InputType } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm";
-import { IsEmail, IsUrl } from "class-validator";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, VersionColumn } from "typeorm";
+import { IsEmail, IsNotEmpty, IsUrl } from "class-validator";
 import { ORMObject } from "../../../types/ORMObject";
+import { UserRole } from "../../../auth/AuthedContext";
 
 export enum UserState {
     New = 'New',
     HasCreated = 'HasCreated',
     HasPublished = 'HasPublished',
 }
-
 registerEnumType(UserState, {
-    name: 'UserState',
+  name: 'UserState',
 });
+export enum LevelClass {
+  Silver = 'Silver',
+  Gold = 'Gold',
+  Diamond = 'Diamond'
+}
 
+registerEnumType(LevelClass, {
+  name: 'LevelClass',
+});
 @ObjectType()
 @InputType('SocialLinkInput')
 export class SocialLink {
@@ -35,6 +43,9 @@ export class User extends ORMObject<User> {
     @PrimaryGeneratedColumn()
     public readonly id!: string;
 
+    @Column({ default: false })
+    public isOps!: boolean;
+
     @Field()
     @CreateDateColumn()
     public createdAt!: Date;
@@ -52,13 +63,6 @@ export class User extends ORMObject<User> {
     @IsEmail()
     public email!: string;
 
-    @Field({ nullable: true })
-    @Column({ nullable: true })
-    @IsEmail()
-    public displayEmail?: string;
-
-    @Column({ type: 'varchar', nullable: true })
-    public confirmationInvite?: string | null;
 
     @Field({ nullable: false })
     @Column({ nullable: false })
@@ -67,6 +71,18 @@ export class User extends ORMObject<User> {
     @Field({ nullable: true })
     @Column({ nullable: true })
     public lastName?: string;
+
+    @Field({ nullable: true })
+    @Column({ nullable: true })
+    public address?: string;
+
+    @Field({ nullable: true })
+    @Column({ type: 'enum', enum: LevelClass, nullable: true })
+    public level?: LevelClass;
+
+    @Field()
+    @Column({ type: 'enum', enum: UserRole })
+    public role!: UserRole;
 
     @Field({ description: 'First + Last name' })
     public name!: string;
@@ -80,18 +96,6 @@ export class User extends ORMObject<User> {
     @Column({ nullable: true })
     public phone?: string;
 
-    @Field({ nullable: true })
-    @Column({ nullable: true })
-    public company?: string;
-
-    @Field({ nullable: true })
-    @Column({ nullable: true })
-    public title?: string;
-
-    @Field({ nullable: true })
-    @Column({ type: 'text', nullable: true })
-    public bio?: string;
-
     @Field(_type => SocialLink, { nullable: true })
     @Column({ type: 'json', nullable: true })
     public socialLinks?: SocialLink;
@@ -100,13 +104,14 @@ export class User extends ORMObject<User> {
     @Column({ nullable: true, default: null })
     public password?: string;
 
-    @Field(_type => UserState)
-    @Column({ type: 'enum', enum: UserState, default: UserState.New })
-    public state!: UserState;
 
     @Field({ nullable: true })
     @Column({ nullable: false, default: false })
     public isVerified?: boolean;
+
+    @Field()
+    @VersionColumn()
+    public version!: number;
 
 }
 
@@ -122,7 +127,84 @@ export class UserInput implements Partial<User> {
 
     @Field()
     public email!: string;
+}
+@ObjectType()
+export class ImpersonatingUser {
+  @Field()
+  public userId!: string;
+}
+@ObjectType()
+export class Me extends User {
+  // Field resolvers are not available in backend
+  @Field(_type => ImpersonatingUser, { nullable: true })
+  protected impersonatingUser?: ImpersonatingUser;
 
-    @Field(_type => UserState)
-    public state!: UserState;
+}
+
+@InputType({ description: 'Change password' })
+export class ChangePasswordInput implements Partial<User> {
+  @Field()
+  public token!: string;
+
+  @Field()
+  @IsEmail()
+  public email!: string;
+
+  @Field()
+  public password!: string;
+}
+@InputType()
+export class UserBaseInput {
+  // } implements Partial<User> {
+
+  // User fields
+  @Field({ nullable: true })
+  public profileMediaUrl?: string;
+
+  @Field()
+  @IsNotEmpty()
+  public firstName!: string;
+
+  @Field()
+  @IsNotEmpty()
+  public lastName!: string;
+
+  @Field({ nullable: true })
+  @IsEmail()
+  public email?: string;
+
+  @Field({ nullable: true })
+  public phone?: string;
+
+  @Field(_type => SocialLink, { nullable: true })
+  public socialLinks?: SocialLink;
+
+  @Field({ nullable: true })
+  public address?: string;
+
+}
+@InputType()
+export class NewUserInput extends UserBaseInput {
+  @Field({ nullable: true })
+  public password?: string;
+
+  @Field(_type => UserRole)
+  public role!: UserRole;
+
+  @Field()
+  @IsEmail()
+  public email!: string;
+}
+
+@InputType({ description: 'Update me' })
+export class UpdateMeInput extends UserBaseInput {
+  @Field()
+  public id!: string;
+
+  @Field({ nullable: true })
+  public password?: string;
+}
+
+export class MeWithTokens extends Me {
+  public impersonatingUser?: ImpersonatingUser;
 }

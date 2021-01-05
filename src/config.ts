@@ -25,8 +25,11 @@ const protocol =
 
 export const config = {
   env,
+  NODE_ENV: process.env.NODE_ENV ?? 'development',
   port: process.env.PORT || 4000,
-
+  DOMAIN: domain,
+  accessTokenMaxAge: 24 * 7 * 60 * 60 * 1000, // for cookies
+  refreshTokenMaxAge: 24 * 7 * 60 * 60 * 1000, // for cookies
   cors: {
     credentials: true,
     origin: [
@@ -52,10 +55,15 @@ export const config = {
   IMGIX_DOMAIN: process.env.IMGIX_DOMAIN || 'ewebinar-dev.imgix.net',
   ASSETS_S3_BUCKET: process.env.ASSETS_S3_BUCKET || 'tingadev',
 
-
+  INTEGRATION_TOKEN_SECRET:
+  process.env.INTEGRATION_TOKEN_SECRET ||
+  process.env.ACCESS_TOKEN_SECRET ||
+  'access-token-2093842l',
 
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || 'access-token-2093842l',
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || 'refresh-token-0293849322',
+  ACCESS_TOKEN_EXPIRE: process.env.ACCESS_TOKEN_EXPIRE || '1h',
+  REFRESH_TOKEN_EXPIRE: process.env.ACCESS_TOKEN_EXPIRE || '30d', // Time before logging out user
   PAGINATION_LIMIT: process.env.PAGINATION_LIMIT || 50,
   WELCOME_MESSAGE_TO_SHOW_AFTER_SECS: 20,
 

@@ -33,6 +33,13 @@ input AudioSecondsInput {
   partId: String
 }
 
+# Change password
+input ChangePasswordInput {
+  email: String!
+  password: String!
+  token: String!
+}
+
 # The javascript `Date` as string. Type represents date and time as the ISO Date string.
 scalar DateTime
 
@@ -43,6 +50,30 @@ enum EnglishCertificateType {
   Toiec
 }
 
+type ImpersonatingUser {
+  userId: String!
+}
+
+type Me {
+  createdAt: DateTime!
+  email: String!
+  firstName: String!
+  id: String!
+  impersonatingUser: ImpersonatingUser
+  isVerified: Boolean
+  lastName: String
+
+  # First + Last name
+  name: String!
+  password: String
+  phone: String
+  profileMediaUrl: String
+  role: String!
+  socialLinks: SocialLink
+  updatedAt: DateTime!
+  version: Float!
+}
+
 enum MediaType {
   Audio
   Image
@@ -50,6 +81,7 @@ enum MediaType {
 }
 
 type Mutation {
+  changePassword(data: ChangePasswordInput!): Me!
   createListTestQuestions(data: TestQuestionInputIds!): [TestQuestion!]!
   createPart(data: NewPartInput!): Part!
   createQuestion(data: NewQuestionInput!): Question!
@@ -57,7 +89,9 @@ type Mutation {
   createTestCategory(data: NewTestCategoryInput!): TestCategory!
   createTestGroup(data: NewTestGroupInput!): TestGroup!
   createTestQuestion(data: TestQuestionInputId!): TestQuestion!
-  createUser(data: UserInput!): User!
+  createUser(data: NewUserInput!): User!
+  login(email: String!, password: String!): Me!
+  logout: Boolean!
   removeFromCat(id: String!): Test!
   removePart(id: String!): String!
   removeQuestion(id: String!): String!
@@ -65,6 +99,7 @@ type Mutation {
   removeTestCategory(id: String!): String!
   removeTestGroup(id: String!): String!
   removeTestQuestion(id: String!): String!
+  updateMe(data: UpdateMeInput!): Me!
   updatePart(data: NewPartInput!): Part!
   updateQuestion(data: NewQuestionInput!): Question!
   updateTest(data: NewTestInput!): Test!
@@ -97,6 +132,7 @@ input NewQuestionInput {
   partId: String
   questionName: String!
   questionType: QuestionType!
+  quickExplaination: String
   result: String!
   skillType: SkillsType!
   testId: String
@@ -136,6 +172,18 @@ input NewTestInput {
   testCategoryId: String
   testName: String
   testQuestionInputIds: TestQuestionInputIds
+}
+
+input NewUserInput {
+  address: String
+  email: String!
+  firstName: String!
+  lastName: String!
+  password: String
+  phone: String
+  profileMediaUrl: String
+  role: UserRole!
+  socialLinks: SocialLinkInput
 }
 
 # Query Order Direction
@@ -196,6 +244,8 @@ type Query {
   getTestGroups(data: TestGroupFilterInput!): TestGroups!
   getTestQuestions(testId: String!): [TestQuestion!]!
   getTests(data: TestFilterInput!): Tests!
+  isEmailAlreadyExist(email: String!): Boolean!
+  me: Me
   part(id: String!): Part!
   question(id: String!): Question!
   questions(questionFilterType: QuestionFilterTypeInput!): Questions!
@@ -218,6 +268,7 @@ type Question {
   image: String!
   questionName: String!
   questionType: QuestionType!
+  quickExplaination: String
   result: String!
   skillType: SkillsType!
   testQuestion: TestQuestion
@@ -250,6 +301,12 @@ enum SkillsType {
 }
 
 type SocialLink {
+  facebook: String
+  linkedin: String
+  twitter: String
+}
+
+input SocialLinkInput {
   facebook: String
   linkedin: String
   twitter: String
@@ -384,11 +441,21 @@ input TestsUpdateInput {
   testIds: TestIdsInput!
 }
 
+# Update me
+input UpdateMeInput {
+  address: String
+  email: String
+  firstName: String!
+  id: String!
+  lastName: String!
+  password: String
+  phone: String
+  profileMediaUrl: String
+  socialLinks: SocialLinkInput
+}
+
 type User {
-  bio: String
-  company: String
   createdAt: DateTime!
-  displayEmail: String
   email: String!
   firstName: String!
   id: String!
@@ -400,21 +467,15 @@ type User {
   password: String
   phone: String
   profileMediaUrl: String
+  role: String!
   socialLinks: SocialLink
-  state: UserState!
-  title: String
   updatedAt: DateTime!
+  version: Float!
 }
 
-input UserInput {
-  email: String!
-  firstName: String!
-  lastName: String!
-  state: UserState!
-}
-
-enum UserState {
-  HasCreated
-  HasPublished
-  New
+# User Authorization Roles
+enum UserRole {
+  Admin
+  Member
+  Ops
 }
