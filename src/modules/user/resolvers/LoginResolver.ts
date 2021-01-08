@@ -1,5 +1,5 @@
 import { ApolloError, AuthenticationError } from 'apollo-server-core';
-import * as bcrypt from 'bcryptjs';
+// import * as bcrypt from 'bcryptjs';
 import {
   Arg,
   Authorized,
@@ -52,10 +52,13 @@ export class LoginResolvers {
       throw new ApolloError(`Sorry, that password can not empty.`);
     }
     const role = me.role;
-    const valid = await bcrypt.compare(password, me.password);
-    if (!valid) {
+    if(password !== me.password){
       throw new AuthenticationError("Sorry, that email and password didn't work.");
-    }
+    } 
+    // const valid = await bcrypt.compare(password, me.password);
+    // if (!valid) {
+    //   throw new AuthenticationError("Sorry, that email and password didn't work.");
+    // }
 
     // Make sure if we've ever had an issue with verification or subscription that we correct that on login
     

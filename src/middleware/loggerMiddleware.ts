@@ -3,7 +3,8 @@ import shortid from 'shortid';
 import httpContext from 'express-http-context';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { Request, Response, NextFunction } from 'express';
-import onHeaders from 'on-headers';
+import onFinished from 'on-finished';
+// import onHeaders from 'on-headers';
 
 const ignoredOperators = ['setsStatus', 'IntrospectionQuery'];
 
@@ -47,6 +48,21 @@ const recordStartTime = (req: LoggedRequest | LoggedResponse) => {
   req._startAt = process.hrtime();
 };
 
+const calcResponseTime = (
+  req: { _startAt: number[] },
+  res: { _startAt: number[] },
+  digits: number = 3
+): string | undefined => {
+  if (!req._startAt || !res._startAt) {
+    return undefined;
+  }
+
+  // return truncated value
+  return (
+    (res._startAt[0] - req._startAt[0]) * 1e3 +
+    (res._startAt[1] - req._startAt[1]) * 1e-6
+  ).toFixed(digits);
+};
 export const loggerMiddleware = async (
   sreq: Request,
   sres: Response<any>,
@@ -63,7 +79,38 @@ export const loggerMiddleware = async (
   recordStartTime(req);
   next();
 
-  onHeaders(res, () => recordStartTime(res));
+  // onHeaders(res, () => recordStartTime(res));
+
+  onFinished(res, () => {
+    if (
+      req.method === 'OPTIONS' ||
+      (req.path === '/' && res.statusCode === 200) ||
+      ignoredOperators.indexOf(req.body.operationName) !== -1
+    ) {
+      return;
+    }
+
+    const responseTime = calcResponseTime(req, res as any);
+
+    const msg = `${req.method}:${req.body.operationName || req.path}`;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const payload = {
+      status: res.statusCode,
+      responseTime: responseTime ? `${responseTime}ms` : undefined,
+      ...(!req.body.operationName
+        ? {
+            ...req.body,
+            ...req.params,
+          }
+        : {}),
+    };
+
+    if (res.statusCode < 200 && res.statusCode > 299) {
+      console.error(msg, payload);
+    } else {
+      console.info(msg, payload);
+    }
+  });
 
 };
 

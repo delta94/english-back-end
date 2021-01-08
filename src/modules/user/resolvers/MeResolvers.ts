@@ -22,10 +22,12 @@ export class MeResolver {
 
   @Authorized()
   @Query(_returns => Me, { nullable: true })
-  public async me(@Ctx() ctx: AuthedContext): Promise<Me> {
+  public async me(@Ctx() ctx: AuthedContext): Promise<Me | undefined> {
     const auth = ctx.userAuth();
-
-    const me = (await this.UserRepository.findOneOrFail(auth.userId)) as MeWithTokens;
+    if(!auth){
+      return undefined;
+    }
+    const me = (await this.UserRepository.findOne(auth.userId) as MeWithTokens);
     me.impersonatingUser = auth.impersonatingUser;
 
     return me;
@@ -35,6 +37,7 @@ export class MeResolver {
   @Mutation(_returns => Me)
   public async updateMe(@Arg('data') data: UpdateMeInput, @Ctx() ctx: AuthedContext): Promise<Me> {
     const user = data;
+   
     const auth = ctx.userAuth();
 
     const userId = AssertNonNull(auth.userId);

@@ -162,7 +162,7 @@ export class AuthedContext {
 
   public tryUserAuth(): UserAuthInfo | undefined {
     const auth = this.req.auth as UserAuthInfo;
-    if (!auth.userId) {
+    if (!auth) {
       return undefined;
     }
     return auth;

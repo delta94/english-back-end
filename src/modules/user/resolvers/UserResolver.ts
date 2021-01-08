@@ -1,8 +1,10 @@
-import { Arg, Authorized, FieldResolver, Query, Resolver, Root, Mutation } from 'type-graphql';
-import { NewUserInput, User } from '../entities/User';
+import { Arg, Authorized, FieldResolver, Query, Resolver, Root, Mutation, Ctx } from 'type-graphql';
+import { MeWithTokens, NewUserInput, User } from '../entities/User';
 // import { MyContext, UserRole } from '../../../types/MyContext';
 import { InjectRepository } from 'typeorm-typedi-extensions';
 import { UserRepository } from '../UserRepsitory';
+import { LoginCookies } from './LoginCookies';
+import { AuthedContext } from '../../../auth/AuthedContext';
 // import { UserRepository } from '../UserRepository';
 // import { MyContext } from '../../../types/MyContext';
 
@@ -27,9 +29,10 @@ export class UserResolver {
 
   @Authorized()
   @Mutation(_type => User)
-  public async createUser(@Arg('data') data: NewUserInput): Promise<User> {
-    console.log('ALOOOOO')
-    return await this.UserRepository.createUser(data);
+  public async createUser(@Arg('data') data: NewUserInput, @Ctx() ctx: AuthedContext): Promise<User> {
+    const user = await this.UserRepository.createUser(data);
+    LoginCookies.setAccessCookiesAndContext(user as MeWithTokens, user.role, ctx.req, ctx.res);
+    return user;
   }
 
   

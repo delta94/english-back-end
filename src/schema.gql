@@ -55,6 +55,7 @@ type ImpersonatingUser {
 }
 
 type Me {
+  address: String
   createdAt: DateTime!
   email: String!
   firstName: String!
@@ -62,6 +63,7 @@ type Me {
   impersonatingUser: ImpersonatingUser
   isVerified: Boolean
   lastName: String
+  level: String
 
   # First + Last name
   name: String!
@@ -455,12 +457,14 @@ input UpdateMeInput {
 }
 
 type User {
+  address: String
   createdAt: DateTime!
   email: String!
   firstName: String!
   id: String!
   isVerified: Boolean
   lastName: String
+  level: String
 
   # First + Last name
   name: String!
