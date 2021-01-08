@@ -11,12 +11,12 @@ const env =
 
 const domain =
   process.env.NODE_ENV === 'production'
-    ? 'ewebinar.com'
+    ? 'http://powper.vn'
     : process.env.NODE_ENV === 'staging'
     ? 'staging.ewebinar.com'
     : process.env.NODE_ENV === 'development'
     ? 'dev.ewebinar.com'
-    : process.env.DOMAIN || 'local.dawson.fm';
+    : process.env.DOMAIN || 'localhost:3000';
 
 const protocol =
   process.env.PROTOCOL || ['production', 'staging', 'development'].includes(env)
