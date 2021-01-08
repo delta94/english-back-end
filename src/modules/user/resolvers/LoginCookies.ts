@@ -38,12 +38,13 @@ export class LoginCookies {
       impersonatingUser,
       scopes: impersonatingUser ? [Scopes.user.stopImpersonating] : undefined,
     });
-
+    console.log('tokens', tokens);
     if (res) {
       res.cookie(`access-token-${config.NODE_ENV}`, tokens.accessToken, {
         maxAge: config.accessTokenMaxAge,
         ...this.cookieOptions,
       });
+      console.log('good set', this.cookieOptions);
       res.cookie(`refresh-token-${config.NODE_ENV}`, tokens.refreshToken, {
         maxAge: config.refreshTokenMaxAge,
         ...this.cookieOptions,
