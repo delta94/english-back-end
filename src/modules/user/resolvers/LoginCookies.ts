@@ -18,7 +18,7 @@ export class LoginCookies {
     domain: process.env.NODE_ENV !== 'production' ? undefined : config.DOMAIN,
     sameSite: process.env.NODE_ENV !== 'production' ? false : 'lax',
     secure: process.env.NODE_ENV !== 'production' ? false : true,
-    httpOnly: true,
+    httpOnly: false, // should be true - https
   };
 
   public static removeAccessCookies(ctx: AuthedContext): void {
