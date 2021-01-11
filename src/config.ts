@@ -11,7 +11,7 @@ const env =
 
 const domain =
   process.env.NODE_ENV === 'production'
-    ? 'http://powper.vn'
+    ? 'powper.vn'
     : process.env.NODE_ENV === 'staging'
     ? 'staging.ewebinar.com'
     : process.env.NODE_ENV === 'development'
