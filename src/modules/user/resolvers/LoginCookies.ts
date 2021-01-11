@@ -16,7 +16,7 @@ import { authSetUserContextFromToken } from '../../../auth/AuthMiddleware';
 export class LoginCookies {
   public static cookieOptions: CookieOptions = {
     domain: process.env.NODE_ENV !== 'production' ? undefined : config.DOMAIN,
-    sameSite: process.env.NODE_ENV !== 'production' ? false : 'lax',
+    sameSite: false,
     // secure: process.env.NODE_ENV !== 'production' ? false : true, //should be true - https
     secure: false, //should be true - https
     httpOnly: true

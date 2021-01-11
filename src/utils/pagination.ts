@@ -1,6 +1,9 @@
+
 import { SelectQueryBuilder } from 'typeorm';
 import config from '../config';
 import { OrderDirection } from '../modules/user/entities/UserFilter';
+
+
 
 export interface PaginationCursorInterface {
   limit: number;
@@ -19,10 +22,10 @@ export class PaginationCursor implements PaginationCursorInterface {
   public constructor(value?: string) {
     if (value) {
       const data = PaginationCursor.toObject(value);
-      this.limit = data.limit;
-      this.offset = data.offset;
-      this.orderBy = data.orderBy;
-      this.orderDir = data.orderDir;
+      this.limit = data.limit ?? this.limit;
+      this.offset = data.offset ?? this.offset;
+      this.orderBy = data.orderBy ?? this.orderBy;
+      this.orderDir = data.orderDir ?? this.orderDir;
     }
   }
 
@@ -36,7 +39,7 @@ export class PaginationCursor implements PaginationCursorInterface {
   }
 
   public static toObject(value: string): PaginationCursor {
-    return JSON.parse(atob(value));
+    return JSON.parse(atob(value)) as PaginationCursor;
   }
 
   public static validate(cursor: string, orderBy: string, orderDir: OrderDirection): boolean {
@@ -66,7 +69,8 @@ export async function queryWithPagination<T>(
     orderDir: OrderDirection;
     limit?: number;
   },
-  cursor?: string
+  cursor?: string,
+  skipTotalCheck?: boolean
 ): Promise<QueryWithPaginationCursor<T>> {
   let cursorObj: PaginationCursor = new PaginationCursor(btoa(JSON.stringify(params)));
   if (cursor && PaginationCursor.validate(cursor, params.orderBy, params.orderDir)) {
@@ -79,12 +83,15 @@ export async function queryWithPagination<T>(
   );
 
   const total: number = await query.getCount();
-  query = query.limit(cursorObj.limit).offset(cursorObj.offset);
+  query = query.take(cursorObj.limit).skip(cursorObj.offset);
   const hasNextCursor = async (c: number, cur: PaginationCursorInterface): Promise<boolean> => {
     if (c <= cur.limit) {
       return false;
     }
     const offsetCount = await query.getMany();
+    if (skipTotalCheck && offsetCount.length > 0) {
+      return true;
+    }
     if (c === offsetCount.length + cur.offset) {
       return false;
     }
