@@ -112,6 +112,11 @@ export class QuestionRepository extends Repository<T> {
         skillType: data.skillType,
       });
     }
+    if(data.title){
+      query = query.andWhere(`question.questionName like :questionName `, {
+        questionName: `%${data.title}%`,
+      });
+    }
     if (data.testId) {
       query = query.andWhere(`question.id NOT IN (
         ${getManager()

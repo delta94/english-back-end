@@ -15,7 +15,7 @@ import { Test, SkillsType } from "../../test/entities/Test";
 import { OrderDirection } from "../../user/entities/UserFilter";
 
 export enum EnglishCertificateType {
-  Toiec = "Toiec",
+  Toeic = "Toeic",
   IELTS = "IELTS",
   Custom = "Custom",
   Blog = "Blog"

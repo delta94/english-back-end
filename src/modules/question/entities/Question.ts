@@ -58,6 +58,9 @@ export class QuestionFilterType {
 
   @Field({ nullable: true })
   public testId?: string;
+
+  @Field({ nullable: true })
+  public title?: string;
 }
 
 @ObjectType()

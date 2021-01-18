@@ -47,7 +47,7 @@ enum EnglishCertificateType {
   Blog
   Custom
   IELTS
-  Toiec
+  Toeic
 }
 
 type ImpersonatingUser {
@@ -283,6 +283,7 @@ input QuestionFilterTypeInput {
   orderDirection: OrderDirection
   skillType: SkillsType
   testId: String
+  title: String
 }
 
 type Questions {
