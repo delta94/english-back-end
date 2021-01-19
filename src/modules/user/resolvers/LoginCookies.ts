@@ -16,7 +16,7 @@ import { config } from '../../../config';
 export class LoginCookies {
   public static cookieOptions: CookieOptions = {
     domain: config.DOMAIN,
-    sameSite: process.env.NODE_ENV !== 'production' ? false : 'lax',
+    sameSite: false,
     secure: false,
     httpOnly: true,
   };
