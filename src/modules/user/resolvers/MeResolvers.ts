@@ -23,6 +23,7 @@ export class MeResolver {
   @Authorized()
   @Query(_returns => Me, { nullable: true })
   public async me(@Ctx() ctx: AuthedContext): Promise<Me | undefined> {
+    console.log('aaaaa', ctx.userAuth())
     const auth = ctx.userAuth();
     if(!auth){
       return undefined;

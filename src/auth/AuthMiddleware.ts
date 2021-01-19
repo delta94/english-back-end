@@ -44,8 +44,8 @@ interface Tokens {
 export const readTokens = (req: AuthedRequest): Tokens => {
   const cookies = req.cookies as Record<string, string>;
 
-  let refreshToken: string | undefined = cookies[`refresh-token-${config.env}`];
-  let accessToken: string | undefined = cookies[`access-token-${config.env}`];
+  let refreshToken: string | undefined = cookies[`refresh-token-${config.NODE_ENV}`];
+  let accessToken: string | undefined = cookies[`access-token-${config.NODE_ENV}`];
 
   // fallback for reading access and refresh token
   if (!refreshToken && !accessToken) {

@@ -16,7 +16,7 @@ const domain =
     ? 'staging.ewebinar.com'
     : process.env.NODE_ENV === 'development'
     ? 'dev.ewebinar.com'
-    : process.env.DOMAIN || 'localhost:3000';
+    : process.env.DOMAIN || 'localhost';
 
 const protocol =
   process.env.PROTOCOL || ['production', 'staging', 'development'].includes(env)
